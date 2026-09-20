@@ -11,6 +11,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet" />
 
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="public/favicon.png" />
+  <link rel="apple-touch-icon" href="public/pbyl-logo.png" />
+
   <!-- Stylesheet -->
   <link rel="stylesheet" href="css/cinema.css" />
 
@@ -38,6 +42,7 @@
   <header class="cinema-nav" data-no-drag>
     <!-- Brand Title (Double-click opens secret admin panel) -->
     <div class="brand-badge" id="brand-badge-trigger" title="PBYL Cinema — Klik 2x untuk Admin" style="cursor: pointer;">
+      <img src="public/pbyl-logo.png" alt="PBYL Logo" class="brand-logo-img" />
       <span class="brand-title">PBYL Cinema</span>
       <span class="brand-tag">PHOTO ENTHUSIAST</span>
     </div>
@@ -167,8 +172,8 @@
     <div class="admin-login-box">
       <button type="button" id="btn-login-close" class="btn-icon" aria-label="Tutup" style="position: absolute; top: 1.25rem; right: 1.25rem;">✕</button>
       
-      <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(216, 164, 127, 0.12); border: 1px solid rgba(216, 164, 127, 0.35); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; font-size: 22px;">
-        🔒
+      <div style="display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;">
+        <img src="public/pbyl-logo.png" alt="PBYL Logo" style="height: 40px; width: auto; object-fit: contain; filter: drop-shadow(0 4px 14px rgba(220, 20, 60, 0.45));" />
       </div>
 
       <h2 style="font-family: var(--font-serif); font-size: 1.85rem; color: var(--text-title); margin-bottom: 0.4rem;">Akses Admin Kurator</h2>
@@ -207,9 +212,12 @@
     <div class="admin-panel-box">
       <!-- Admin Header -->
       <div class="admin-header">
-        <div class="admin-title-wrap">
-          <h2>PBYL Studio Manager</h2>
-          <p>Kelola katalog foto, buat seri album baru, atur format landscape/portrait, dan sinkronkan kurasi.</p>
+        <div class="admin-title-wrap" style="display: flex; align-items: center; gap: 0.85rem;">
+          <img src="public/pbyl-logo.png" alt="PBYL Logo" style="height: 32px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 8px rgba(220, 20, 60, 0.4));" />
+          <div>
+            <h2 style="margin: 0;">PBYL Studio Manager</h2>
+            <p style="margin: 2px 0 0 0;">Kelola katalog foto, buat seri album baru, atur format landscape/portrait, dan sinkronkan kurasi.</p>
+          </div>
         </div>
         <div class="admin-header-actions">
           <button type="button" id="btn-admin-change-pass" class="nav-btn" style="font-size: 9.5px; border-color: rgba(255,255,255,0.2);">
