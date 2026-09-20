@@ -274,24 +274,11 @@
                 <span class="form-preview-placeholder">Pratinjau Gambar Foto</span>
               </div>
 
-              <!-- Orientation Selector -->
-              <div class="form-group">
-                <label>Orientasi Foto</label>
-                <div class="orientation-selector">
-                  <label class="orient-option" id="opt-orient-landscape">
-                    <input type="radio" name="photo-orient" value="landscape" checked />
-                    <div>
-                      <div class="orient-title">Landscape (Horizontal)</div>
-                      <div class="orient-desc">Layar penuh sinema 16:9 / 2.39:1</div>
-                    </div>
-                  </label>
-                  <label class="orient-option" id="opt-orient-portrait">
-                    <input type="radio" name="photo-orient" value="portrait" />
-                    <div>
-                      <div class="orient-title">Portrait (Vertikal)</div>
-                      <div class="orient-desc">Bingkai matte 4:5 dengan ambient glow</div>
-                    </div>
-                  </label>
+              <!-- Auto Detected Orientation Indicator -->
+              <div class="form-group" style="margin-bottom: 0.85rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.65rem 0.85rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px;">
+                  <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em;">Deteksi Orientasi Foto</span>
+                  <span id="photo-detected-text" style="font-size: 11px; font-weight: 500; color: #a39887; letter-spacing: 0.04em;">Otomatis (Menunggu gambar...)</span>
                 </div>
               </div>
 
@@ -602,10 +589,8 @@
     const photoPreviewBox = document.getElementById("photo-preview-box");
     const adminPhotoAlbumSelect = document.getElementById("admin-photo-album-select");
 
-    const optOrientLandscape = document.getElementById("opt-orient-landscape");
-    const optOrientPortrait = document.getElementById("opt-orient-portrait");
-    const radioLandscape = optOrientLandscape.querySelector("input");
-    const radioPortrait = optOrientPortrait.querySelector("input");
+    const photoDetectedText = document.getElementById("photo-detected-text");
+    let currentDetectedOrientation = "landscape";
 
     // Album Form References
     const adminAlbumForm = document.getElementById("admin-album-form");
@@ -1083,18 +1068,18 @@
     }
     cancelAlbumFormBtn.addEventListener("click", showAlbumListView);
 
-    // Orientation Radio Toggle
-    function updateOrientRadioStyles() {
-      if (radioPortrait.checked) {
-        optOrientPortrait.classList.add("selected");
-        optOrientLandscape.classList.remove("selected");
+    // Automatic Orientation Helper
+    function updateOrientationUI(orient) {
+      currentDetectedOrientation = orient;
+      if (!photoDetectedText) return;
+      if (orient === "portrait") {
+        photoDetectedText.textContent = "Portrait / Vertikal (Terdeteksi)";
+        photoDetectedText.style.color = "#e5a93b";
       } else {
-        optOrientLandscape.classList.add("selected");
-        optOrientPortrait.classList.remove("selected");
+        photoDetectedText.textContent = "Landscape / Horizontal (Terdeteksi)";
+        photoDetectedText.style.color = "#88b7d5";
       }
     }
-    radioLandscape.addEventListener("change", updateOrientRadioStyles);
-    radioPortrait.addEventListener("change", updateOrientRadioStyles);
 
     // Populate Album Options in Photo Form
     function populatePhotoAlbumSelect(selectedId = "") {
@@ -1285,8 +1270,11 @@
       adminPhotoForm.reset();
       adminEditPhotoId.value = "";
       photoFormHeading.textContent = "Tambah Foto Baru";
-      radioLandscape.checked = true;
-      updateOrientRadioStyles();
+      currentDetectedOrientation = "landscape";
+      if (photoDetectedText) {
+        photoDetectedText.textContent = "Otomatis (Menunggu gambar...)";
+        photoDetectedText.style.color = "#a39887";
+      }
       populatePhotoAlbumSelect();
       currentPhotoPreviewUrl = "";
       document.getElementById("admin-quote-input").value = "";
@@ -1316,9 +1304,7 @@
         adminUrlInput.value = slide.imageId ? `https://images.unsplash.com/photo-${slide.imageId}?w=1920&h=1080` : "";
       }
 
-      if (slide.orientation === "portrait") radioPortrait.checked = true;
-      else radioLandscape.checked = true;
-      updateOrientRadioStyles();
+      updateOrientationUI(slide.orientation || "landscape");
 
       currentPhotoPreviewUrl = getSlideImageUrl(slide, 800, 500);
       photoPreviewBox.innerHTML = `<img src="${currentPhotoPreviewUrl}" alt="Preview" />`;
@@ -1346,18 +1332,23 @@
     });
 
     function autoDetectImageAspect(src) {
-      const testImg = new Image();
-      testImg.onload = () => {
-        if (testImg.naturalHeight > testImg.naturalWidth) {
-          radioPortrait.checked = true;
-          document.getElementById("admin-aspect-input").value = "4:5 PORTRAIT";
-        } else {
-          radioLandscape.checked = true;
-          document.getElementById("admin-aspect-input").value = "2.39:1 CINEMA";
-        }
-        updateOrientRadioStyles();
-      };
-      testImg.src = src;
+      if (!src) return Promise.resolve(currentDetectedOrientation);
+      return new Promise((resolve) => {
+        const testImg = new Image();
+        testImg.onload = () => {
+          const isPortrait = testImg.naturalHeight > testImg.naturalWidth;
+          const orient = isPortrait ? "portrait" : "landscape";
+          updateOrientationUI(orient);
+
+          const aspectInput = document.getElementById("admin-aspect-input");
+          if (aspectInput && (!aspectInput.value || aspectInput.value.includes("CINEMA") || aspectInput.value.includes("PORTRAIT"))) {
+            aspectInput.value = isPortrait ? "4:5 PORTRAIT" : "2.39:1 CINEMA";
+          }
+          resolve(orient);
+        };
+        testImg.onerror = () => resolve(currentDetectedOrientation);
+        testImg.src = src;
+      });
     }
 
     // Submit Photo Form
@@ -1371,12 +1362,17 @@
       const directorInput = document.getElementById("admin-director-input").value.trim() || "PBYL CINEMA";
       const descInput = document.getElementById("admin-desc-input").value.trim() || "Eksplorasi visual tentang ruang, hening, dan pergerakan cahaya.";
       const formatInput = document.getElementById("admin-format-input").value.trim() || "35MM CINEMA";
-      const aspectInput = document.getElementById("admin-aspect-input").value.trim() || (radioPortrait.checked ? "4:5 PORTRAIT" : "2.39:1");
+
+      // Detect orientation from current preview image
+      if (currentPhotoPreviewUrl) {
+        await autoDetectImageAspect(currentPhotoPreviewUrl);
+      }
+      const orientation = currentDetectedOrientation;
+      const aspectInput = document.getElementById("admin-aspect-input").value.trim() || (orientation === "portrait" ? "4:5 PORTRAIT" : "2.39:1 CINEMA");
       const filmCodeInput = document.getElementById("admin-filmcode-input").value.trim() || "KODAK 5219 · 188 0214";
       const awardLabel = document.getElementById("admin-award-label").value.trim() || "CURATOR SELECTION";
       const quoteInput = document.getElementById("admin-quote-input").value.trim() || "MESMERIZING STILLNESS";
       const albumId = adminPhotoAlbumSelect.value;
-      const orientation = radioPortrait.checked ? "portrait" : "landscape";
 
       const words = titleInput.split(" ");
       let titleLines = [titleInput];
