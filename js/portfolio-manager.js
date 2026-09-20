@@ -241,9 +241,9 @@ const STORAGE_ALBUMS_KEY = "cinema_atelier_albums_v3";
 export function loadAlbums() {
   try {
     const saved = localStorage.getItem(STORAGE_ALBUMS_KEY);
-    if (saved) {
+    if (saved !== null) {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
@@ -289,12 +289,11 @@ export function updateAlbum(id, updatedData) {
 export function deleteAlbum(id) {
   let albums = loadAlbums();
   albums = albums.filter((a) => a.id !== id);
-  if (albums.length === 0) albums = [...DEFAULT_ALBUMS];
   saveAlbums(albums);
 
-  // Re-assign orphaned slides to first remaining album
+  // Re-assign orphaned slides to first remaining album if any
   const slides = loadSlides();
-  const fallbackId = albums[0].id;
+  const fallbackId = albums.length > 0 ? albums[0].id : "general";
   slides.forEach((s) => {
     if (s.albumId === id) s.albumId = fallbackId;
   });
@@ -312,9 +311,9 @@ export function deleteAlbum(id) {
 export function loadSlides() {
   try {
     const saved = localStorage.getItem(STORAGE_SLIDES_KEY);
-    if (saved) {
+    if (saved !== null) {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed.map((s) => ({
           ...s,
           orientation: s.orientation || "landscape",
@@ -366,9 +365,6 @@ export function updateSlide(id, updatedData) {
 export function deleteSlide(id) {
   let slides = loadSlides();
   slides = slides.filter((s) => s.id !== id);
-  if (slides.length === 0) {
-    slides = [...DEFAULT_SLIDES];
-  }
   saveSlides(slides);
 
   if (isSupabaseConnected()) {
@@ -377,16 +373,21 @@ export function deleteSlide(id) {
   return slides;
 }
 
+export function clearAllSlides() {
+  saveSlides([]);
+  return [];
+}
+
 export async function syncWithSupabase() {
   if (!isSupabaseConnected()) return false;
   try {
     const cloudAlbums = await fetchCloudAlbums();
     const cloudPhotos = await fetchCloudPhotos();
 
-    if (cloudAlbums && cloudAlbums.length > 0) {
+    if (cloudAlbums && Array.isArray(cloudAlbums)) {
       saveAlbums(cloudAlbums);
     }
-    if (cloudPhotos && cloudPhotos.length > 0) {
+    if (cloudPhotos && Array.isArray(cloudPhotos)) {
       saveSlides(cloudPhotos);
     }
     return true;

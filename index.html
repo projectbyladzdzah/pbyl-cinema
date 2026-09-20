@@ -253,7 +253,10 @@
           <div id="admin-photo-list-view">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
               <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Daftar Plat Foto Terpasang</span>
-              <button type="button" id="btn-photo-list-add" class="nav-btn primary" style="font-size: 10px; padding: 0.4rem 0.85rem;">+ Tambah Foto Baru</button>
+              <div style="display:flex; gap:0.5rem; align-items:center;">
+                <button type="button" id="btn-photo-clear-all" class="nav-btn" style="font-size: 10px; padding: 0.4rem 0.75rem; color: #e57373; border-color: rgba(229,115,115,0.3);" title="Hapus seluruh foto demo/lama sekaligus">🗑️ Kosongkan Semua</button>
+                <button type="button" id="btn-photo-list-add" class="nav-btn primary" style="font-size: 10px; padding: 0.4rem 0.85rem;">+ Tambah Foto Baru</button>
+              </div>
             </div>
             <div id="admin-photo-container" class="admin-photo-list"></div>
           </div>
@@ -512,6 +515,7 @@
       updateAlbum,
       deleteAlbum,
       resetToDefaultSlides,
+      clearAllSlides,
       getSlideImageUrl,
       syncWithSupabase
     } from "./js/portfolio-manager.js";
@@ -612,6 +616,7 @@
     const adminAlbumCoverInput = document.getElementById("admin-album-cover");
     const albumPreviewBox = document.getElementById("album-preview-box");
     const btnPhotoListAdd = document.getElementById("btn-photo-list-add");
+    const btnPhotoClearAll = document.getElementById("btn-photo-clear-all");
     const btnAlbumListAdd = document.getElementById("btn-album-list-add");
 
     let isGalleryMode = false;
@@ -712,30 +717,43 @@
 
       // 1. Render Albums Row
       galleryAlbumsContainer.innerHTML = "";
-      albums.forEach((album) => {
-        const count = allSlides.filter((s) => s.albumId === album.id).length;
-        const card = document.createElement("div");
-        card.className = "album-cover-card";
-        card.innerHTML = `
-          <img src="${album.coverImage}" alt="${album.title}" loading="lazy" />
-          <div class="album-card-count">${count} PLATES</div>
-          <div class="album-card-overlay">
-            <div class="album-card-title">${album.title}</div>
-            <div class="album-card-meta">${album.year} &middot; ${album.location} &middot; ${album.filmStock.split("·")[0]}</div>
-          </div>
-        `;
-        card.addEventListener("click", () => {
-          selectAlbum(album.id);
-          isGalleryMode = false;
-          galleryView.classList.remove("active");
-          viewModeLabel.textContent = "Katalog Galeri";
+      if (albums.length === 0) {
+        galleryAlbumsContainer.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem; padding:1rem 0;">Belum ada album yang dibuat.</div>`;
+      } else {
+        albums.forEach((album) => {
+          const count = allSlides.filter((s) => s.albumId === album.id).length;
+          const card = document.createElement("div");
+          card.className = "album-cover-card";
+          card.innerHTML = `
+            <img src="${album.coverImage}" alt="${album.title}" loading="lazy" />
+            <div class="album-card-count">${count} PLATES</div>
+            <div class="album-card-overlay">
+              <div class="album-card-title">${album.title}</div>
+              <div class="album-card-meta">${album.year} &middot; ${album.location} &middot; ${album.filmStock.split("·")[0]}</div>
+            </div>
+          `;
+          card.addEventListener("click", () => {
+            selectAlbum(album.id);
+            isGalleryMode = false;
+            galleryView.classList.remove("active");
+            viewModeLabel.textContent = "Katalog Galeri";
+          });
+          galleryAlbumsContainer.appendChild(card);
         });
-        galleryAlbumsContainer.appendChild(card);
-      });
+      }
 
       // 2. Render Photos Grid
       const visibleSlides = app.activeAlbumId === "all" ? allSlides : allSlides.filter((s) => s.albumId === app.activeAlbumId);
       galleryGrid.innerHTML = "";
+      if (visibleSlides.length === 0) {
+        galleryGrid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1rem; color: var(--text-muted);">
+            <p style="font-family:'Playfair Display',serif; font-size:1.5rem; color:#f6efe2; margin-bottom:0.5rem;">Tidak Ada Foto</p>
+            <p style="font-size:0.875rem;">Belum ada foto dalam galeri atau album ini.</p>
+          </div>
+        `;
+        return;
+      }
       visibleSlides.forEach((slide, idx) => {
         const isPortrait = slide.orientation === "portrait";
         const card = document.createElement("div");
@@ -1097,6 +1115,16 @@
       const albums = loadAlbums();
       adminPhotoContainer.innerHTML = "";
 
+      if (slides.length === 0) {
+        adminPhotoContainer.innerHTML = `
+          <div style="text-align:center; padding:3rem 1.5rem; color:var(--text-muted); font-size:12px; border:1px dashed rgba(255,255,255,0.12); border-radius:4px; margin-top:0.5rem;">
+            <p style="font-family:'Playfair Display',serif; font-size:1.15rem; color:#f6efe2; margin-bottom:0.5rem;">Belum Ada Plat Foto Terpasang</p>
+            <p style="max-width:340px; margin:0 auto; line-height:1.6;">Semua foto demo bawaan telah dibersihkan. Klik tombol <strong>+ Tambah Foto Baru</strong> di atas untuk memasukkan karya fotografi Anda.</p>
+          </div>
+        `;
+        return;
+      }
+
       slides.forEach((slide, index) => {
         const isPortrait = slide.orientation === "portrait";
         const album = albums.find((a) => a.id === slide.albumId);
@@ -1166,6 +1194,16 @@
       const allSlides = loadSlides();
       adminAlbumContainer.innerHTML = "";
 
+      if (albums.length === 0) {
+        adminAlbumContainer.innerHTML = `
+          <div style="text-align:center; padding:3rem 1.5rem; color:var(--text-muted); font-size:12px; border:1px dashed rgba(255,255,255,0.12); border-radius:4px; margin-top:0.5rem;">
+            <p style="font-family:'Playfair Display',serif; font-size:1.15rem; color:#f6efe2; margin-bottom:0.5rem;">Belum Ada Album</p>
+            <p style="max-width:340px; margin:0 auto; line-height:1.6;">Klik tombol <strong>+ Buat Album Baru</strong> untuk mengelompokkan koleksi foto Anda ke dalam tema.</p>
+          </div>
+        `;
+        return;
+      }
+
       albums.forEach((album) => {
         const count = allSlides.filter((s) => s.albumId === album.id).length;
         const row = document.createElement("div");
@@ -1222,9 +1260,25 @@
       }
     });
 
-    // Quick Add Buttons in Photo and Album List headers
+    // Quick Add and Clear All Buttons
     if (btnPhotoListAdd) btnPhotoListAdd.addEventListener("click", openAddPhotoForm);
     if (btnAlbumListAdd) btnAlbumListAdd.addEventListener("click", openAddAlbumForm);
+    if (btnPhotoClearAll) {
+      btnPhotoClearAll.addEventListener("click", () => {
+        const slides = loadSlides();
+        if (slides.length === 0) {
+          alert("Galeri sudah dalam kondisi kosong.");
+          return;
+        }
+        if (confirm("Kosongkan semua foto dari portofolio? Anda dapat menambahkan karya foto baru Anda setelah ini.")) {
+          const updated = clearAllSlides();
+          app.reloadSlides(updated);
+          renderAdminList();
+          renderAlbumDropdown();
+          if (isGalleryMode) renderGalleryView();
+        }
+      });
+    }
 
     // --- OPEN PHOTO FORM (Add vs Edit) ---
     function openAddPhotoForm() {
