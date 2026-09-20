@@ -3,7 +3,7 @@
 > **Cinematic Photography Portfolio & Visual Exhibition**  
 > An edge-to-edge, bespoke vertical reel designed for photographers and visual storytellers.
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-GitHub_Pages-222?style=for-the-badge&logo=github)](https://ladzdzah666.github.io/pbyl-cinema/)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-GitHub_Pages-222?style=for-the-badge&logo=github)](https://projectbyladzdzah.github.io/pbyl-cinema/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 [![Vanilla JS](https://img.shields.io/badge/Stack-Vanilla_HTML%2FCSS%2FESM-orange?style=for-the-badge)](https://developer.mozilla.org/)
 
@@ -109,7 +109,7 @@ Open your browser at `http://localhost:8080/`.
    - **Branch**: Select `main` and `/ (root)`.
    - Click **Save**.
 4. Your portfolio will be live at:
-   `https://ladzdzah666.github.io/pbyl-cinema/`
+   `https://projectbyladzdzah.github.io/pbyl-cinema/`
 
 ---
 
