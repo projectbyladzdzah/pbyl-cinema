@@ -720,7 +720,20 @@ button {
 }
 
 @media (max-width: 768px), (orientation: portrait) and (max-width: 1024px) {
-  /* On mobile / portrait displays, display horizontal photos in full uncropped glory */
+  /* Fix wrapper sizing on mobile: zero out -60dvh margins so it fits exactly 100vw x 100dvh */
+  .slide-image-wrapper {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+
   .slide-image-wrapper.is-landscape {
     display: flex !important;
     align-items: center !important;
@@ -741,47 +754,76 @@ button {
   }
 
   .landscape-pillar-container {
-    position: relative;
-    z-index: 2;
-    width: 95vw;
-    max-width: 95vw;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: clamp(65px, 14dvh, 125px);
-    border-radius: 8px;
-    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.88);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    overflow: hidden;
-    background: #000;
+    position: relative !important;
+    inset: auto !important;
+    z-index: 2 !important;
+    width: 95vw !important;
+    max-width: 95vw !important;
+    height: auto !important;
+    max-height: 50dvh !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 auto !important;
+    margin-bottom: clamp(90px, 16dvh, 145px) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    overflow: hidden !important;
+    background: #000 !important;
   }
 
   .landscape-main-img {
     width: 100% !important;
     height: auto !important;
-    max-height: 48dvh !important;
+    max-height: 50dvh !important;
     object-fit: contain !important;
+    object-position: center !important;
     display: block !important;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: high-quality;
+    image-rendering: -webkit-optimize-contrast !important;
+    image-rendering: high-quality !important;
   }
 
   /* Fine-tune portrait on mobile so it leaves room for editorial title */
   .portrait-pillar-container {
-    max-height: 52dvh !important;
+    position: relative !important;
+    inset: auto !important;
+    z-index: 2 !important;
+    width: auto !important;
     max-width: 88vw !important;
-    margin-bottom: clamp(55px, 12dvh, 110px);
+    height: auto !important;
+    max-height: 52dvh !important;
+    margin: 0 auto !important;
+    margin-bottom: clamp(80px, 14dvh, 130px) !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
   }
 
+  .portrait-main-img {
+    width: auto !important;
+    max-width: 88vw !important;
+    height: auto !important;
+    max-height: 52dvh !important;
+    object-fit: contain !important;
+    display: block !important;
+  }
+
+  /* Hide harsh vignette overlays on mobile so photo is 100% clean */
+  .slide-vignette-vertical,
+  .slide-vignette-radial {
+    display: none !important;
+  }
+
+  /* Gradient starts lower (at 60%) so it never shadows or darkens the photo */
   .slide-content-layer {
     padding: 0 1.25rem 1.75rem !important;
     background: linear-gradient(
       180deg,
-      transparent 35%,
-      rgba(10, 9, 8, 0.65) 60%,
-      rgba(10, 9, 8, 0.95) 100%
+      transparent 60%,
+      rgba(10, 9, 8, 0.72) 78%,
+      rgba(10, 9, 8, 0.96) 100%
     ) !important;
-    z-index: 6;
+    z-index: 6 !important;
   }
 
   .slide-editorial-bar {
