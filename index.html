@@ -254,6 +254,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
               <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Daftar Plat Foto Terpasang</span>
               <div style="display:flex; gap:0.5rem; align-items:center;">
+                <button type="button" id="btn-photo-export" class="nav-btn" style="font-size: 10px; padding: 0.4rem 0.75rem;" title="Salin data foto saat ini untuk disinkronkan ke GitHub">📋 Salin Data Foto</button>
                 <button type="button" id="btn-photo-clear-all" class="nav-btn" style="font-size: 10px; padding: 0.4rem 0.75rem; color: #e57373; border-color: rgba(229,115,115,0.3);" title="Hapus seluruh foto demo/lama sekaligus">🗑️ Kosongkan Semua</button>
                 <button type="button" id="btn-photo-list-add" class="nav-btn primary" style="font-size: 10px; padding: 0.4rem 0.85rem;">+ Tambah Foto Baru</button>
               </div>
@@ -601,6 +602,7 @@
     const adminAlbumCoverInput = document.getElementById("admin-album-cover");
     const albumPreviewBox = document.getElementById("album-preview-box");
     const btnPhotoListAdd = document.getElementById("btn-photo-list-add");
+    const btnPhotoExport = document.getElementById("btn-photo-export");
     const btnPhotoClearAll = document.getElementById("btn-photo-clear-all");
     const btnAlbumListAdd = document.getElementById("btn-album-list-add");
 
@@ -1257,9 +1259,27 @@
       }
     });
 
-    // Quick Add and Clear All Buttons
+    // Quick Add, Clear All, and Export Buttons
     if (btnPhotoListAdd) btnPhotoListAdd.addEventListener("click", openAddPhotoForm);
     if (btnAlbumListAdd) btnAlbumListAdd.addEventListener("click", openAddAlbumForm);
+    if (btnPhotoExport) {
+      btnPhotoExport.addEventListener("click", () => {
+        const payload = {
+          albums: loadAlbums(),
+          slides: loadSlides(),
+        };
+        const text = JSON.stringify(payload, null, 2);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => {
+            alert("📋 Data foto & album saat ini berhasil disalin ke clipboard! Silakan paste (Ctrl+V) ke chat asisten AI agar langsung di-push ke GitHub repository.");
+          }).catch(() => {
+            prompt("Salin data foto berikut untuk dikirim ke asisten AI:", text);
+          });
+        } else {
+          prompt("Salin data foto berikut untuk dikirim ke asisten AI:", text);
+        }
+      });
+    }
     if (btnPhotoClearAll) {
       btnPhotoClearAll.addEventListener("click", () => {
         const slides = loadSlides();
