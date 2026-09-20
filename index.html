@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>PBYL Cinema — Photo Enthusiast & Visual Exhibition</title>
+  <meta name="description" content="Koleksi kurasi karya hobi fotografi sinematik oleh PBYL Cinema dengan sistem multi-album." />
+
+  <!-- Google Fonts: Playfair Display & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet" />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/cinema.css" />
+
+  <!-- GSAP 3 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+
+  <!-- Organic Analog Film Grain Overlay -->
+  <div class="film-grain-overlay" aria-hidden="true"></div>
+
+  <!-- Offscreen SVG Filter for Vertical Motion Blur -->
+  <svg aria-hidden="true" focusable="false" style="width: 0; height: 0; position: absolute; pointer-events: none;">
+    <defs>
+      <filter id="cinema-motion-blur" x="-5%" y="-25%" width="110%" height="150%">
+        <feGaussianBlur id="cinema-fe-blur" in="SourceGraphic" stdDeviation="0 0" />
+      </filter>
+    </defs>
+  </svg>
+
+  <!-- Top Navigation & Atelier Console -->
+  <header class="cinema-nav" data-no-drag>
+    <!-- Brand Title (Double-click opens secret admin panel) -->
+    <div class="brand-badge" id="brand-badge-trigger" title="PBYL Cinema — Klik 2x untuk Admin" style="cursor: pointer;">
+      <span class="brand-title">PBYL Cinema</span>
+      <span class="brand-tag">PHOTO ENTHUSIAST</span>
+    </div>
+
+    <!-- Center Console: Album Selector & Aspect Ratio Console -->
+    <div class="nav-center-console">
+      <!-- Album Selector Dropdown -->
+      <div class="album-selector-box">
+        <button type="button" id="btn-album-select" class="album-select-btn" aria-label="Pilih Album">
+          <span>ALBUM: <strong id="current-album-label" style="color:#fff;">SEMUA SERI</strong></span>
+          <span style="font-size: 8px;">▼</span>
+        </button>
+        <div id="album-dropdown-menu" class="album-select-dropdown"></div>
+      </div>
+
+      <!-- Aspect Ratio Switcher -->
+      <div class="aspect-console" aria-label="Console Rasio Lensa">
+        <button type="button" class="aspect-btn active" data-ratio="standard">STD</button>
+        <button type="button" class="aspect-btn" data-ratio="scope">2.39:1</button>
+        <button type="button" class="aspect-btn" data-ratio="euro">1.66:1</button>
+        <button type="button" class="aspect-btn" data-ratio="medium">4:5</button>
+        <button type="button" class="aspect-btn" data-ratio="square">1:1</button>
+      </div>
+    </div>
+
+    <!-- Nav Controls (Clean, minimal, distraction-free) -->
+    <div class="nav-controls">
+      <button type="button" id="btn-toggle-view" class="nav-btn" aria-label="Toggle Gallery View">
+        <span id="view-mode-label">Katalog Galeri</span>
+      </button>
+      <button type="button" id="btn-open-admin" class="nav-btn admin" style="display: none;" aria-hidden="true" tabindex="-1">
+        <span>⚙ Admin</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Cinema Reel Section (Full-Viewport Immersion) -->
+  <main>
+    <section id="cinema-section" class="cinema-section">
+      <!-- The Track translated by spring physics -->
+      <div id="cinema-track" class="cinema-track" style="filter: url(#cinema-motion-blur);"></div>
+
+      <!-- Top and Bottom Vignette Masks -->
+      <div class="cinema-mask top"></div>
+      <div class="cinema-mask bottom"></div>
+
+      <!-- Scanlines Projector Overlay -->
+      <div id="cinema-scanlines" class="cinema-scanlines" aria-hidden="true"></div>
+
+      <!-- Right-Edge Reel Indicator -->
+      <nav id="reel-indicator" class="reel-indicator" aria-label="Slide Indicator">
+        <div id="indicator-current" class="index-label">01</div>
+        <div id="pip-column" class="pip-column" data-no-drag></div>
+        <div id="indicator-total" class="index-label total">08</div>
+      </nav>
+
+      <!-- Zen Mode Floating Toggle (Pure Full Screen Photo View) -->
+      <button type="button" id="btn-zen-mode" class="btn-zen-mode" data-no-drag title="Toggle Zen Mode (Press Space)">
+        <span class="zen-icon">👁</span>
+        <span>Zen View</span>
+      </button>
+
+      <!-- Custom Circular Cinema Cursor -->
+      <div id="cinema-cursor" class="cinema-cursor" aria-hidden="true">
+        <div class="cursor-inner">
+          <div class="cursor-circle"></div>
+          
+          <!-- State: SCROLL -->
+          <div id="cursor-scroll" class="cursor-state-scroll">
+            <span>SCROLL</span>
+          </div>
+
+          <!-- State: DRAG (Grab Hand) -->
+          <div id="cursor-drag" class="cursor-state-drag">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 11V7.5a1.5 1.5 0 0 1 3 0V11" />
+              <path d="M10 11V6.5a1.5 1.5 0 0 1 3 0V11" />
+              <path d="M13 11V7a1.5 1.5 0 0 1 3 0v6" />
+              <path d="M16 9.5a1.5 1.5 0 0 1 3 0V15c0 3-2.2 6-6 6-3.4 0-5.5-1.8-6.5-3.5l-2.7-4.7a1.4 1.4 0 0 1 2.4-1.4L8 13" />
+            </svg>
+          </div>
+
+          <!-- Top Zone Chevron -->
+          <div id="cursor-up" class="cursor-chevron-up">
+            <svg width="22" height="14" viewBox="0 0 22 14" fill="none">
+              <path d="M2 12 C 7 4, 15 4, 20 12" stroke="white" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </div>
+
+          <!-- Bottom Zone Chevron -->
+          <div id="cursor-down" class="cursor-chevron-down">
+            <svg width="22" height="14" viewBox="0 0 22 14" fill="none">
+              <path d="M2 12 C 7 4, 15 4, 20 12" stroke="white" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Curated Editorial Gallery View (Albums & Plates Grid) -->
+    <section id="gallery-view" class="gallery-view" aria-label="Curated Gallery Sheet">
+      <div class="gallery-header">
+        <h1 class="gallery-headline">Darkroom Archives</h1>
+        <p class="gallery-sub">Koleksi Seri Album &middot; Medium Format &middot; Silver Halide Grain</p>
+      </div>
+
+      <!-- ALBUMS COLLECTION SECTION -->
+      <div class="gallery-albums-heading">
+        <span>SERI ALBUM FOTOGRAFI</span>
+        <span>&middot;</span>
+        <span>PILIH SERI UNTUK MEMBUKA DI REEL</span>
+      </div>
+      <div id="gallery-albums-container" class="gallery-albums-row"></div>
+
+      <!-- INDIVIDUAL PHOTO PLATES SECTION -->
+      <div class="gallery-albums-heading" style="margin-top: 2rem;">
+        <span>SEMUA LEMBAR FOTO (PLATES)</span>
+      </div>
+      <div id="gallery-grid" class="gallery-grid"></div>
+    </section>
+  </main>
+
+  <!-- ========================================================================
+       ADMIN LOGIN MODAL (Protected Gate)
+       ======================================================================== -->
+  <div id="admin-login-modal" class="admin-panel-overlay" aria-hidden="true" data-no-drag>
+    <div class="admin-login-box">
+      <button type="button" id="btn-login-close" class="btn-icon" aria-label="Tutup" style="position: absolute; top: 1.25rem; right: 1.25rem;">✕</button>
+      
+      <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(216, 164, 127, 0.12); border: 1px solid rgba(216, 164, 127, 0.35); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; font-size: 22px;">
+        🔒
+      </div>
+
+      <h2 style="font-family: var(--font-serif); font-size: 1.85rem; color: var(--text-title); margin-bottom: 0.4rem;">Akses Admin Kurator</h2>
+      <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.75rem;">
+        Masukkan kata sandi untuk mengelola album, menambah foto, dan mengatur kurasi portofolio.
+      </p>
+
+      <form id="admin-login-form">
+        <div class="form-group" style="text-align: left; position: relative; margin-bottom: 0.5rem;">
+          <label for="admin-login-pass">Kata Sandi Admin</label>
+          <div style="position: relative;">
+            <input type="password" id="admin-login-pass" class="form-control" placeholder="Ketik kata sandi..." required style="padding-right: 2.75rem;" />
+            <button type="button" id="btn-toggle-pass" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 15px; padding: 4px;" title="Lihat kata sandi">👁</button>
+          </div>
+        </div>
+
+        <div id="admin-login-error" style="display: none; color: #ff6b6b; font-size: 11px; margin-top: 0.6rem; text-align: left; padding: 0.45rem 0.75rem; border-radius: 8px; background: rgba(220, 53, 69, 0.15); border: 1px solid rgba(220, 53, 69, 0.3);">
+          Kata sandi salah. Silakan coba lagi.
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+          <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem;">Masuk ke Admin Panel</button>
+        </div>
+
+        <p style="font-size: 10.5px; color: rgba(255,255,255,0.4); margin-top: 1.25rem; font-family: var(--font-mono); letter-spacing: 0.05em;">
+          Area terproteksi khusus pengelola galeri.
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       ADMIN PANEL DASHBOARD (Multi-Album & Photo CRUD)
+       ======================================================================== -->
+  <div id="admin-panel-modal" class="admin-panel-overlay" aria-hidden="true" data-no-drag>
+    <div class="admin-panel-box">
+      <!-- Admin Header -->
+      <div class="admin-header">
+        <div class="admin-title-wrap">
+          <h2>PBYL Studio Manager</h2>
+          <p>Kelola katalog foto, buat seri album baru, atur format landscape/portrait, dan sinkronkan kurasi.</p>
+        </div>
+        <div class="admin-header-actions">
+          <button type="button" id="btn-admin-change-pass" class="nav-btn" style="font-size: 9.5px; border-color: rgba(255,255,255,0.2);">
+            🔑 Sandi
+          </button>
+          <button type="button" id="btn-admin-reset" class="nav-btn" style="font-size: 9.5px; border-color: rgba(255,255,255,0.2);">
+            ↺ Reset Bawaan
+          </button>
+          <button type="button" id="btn-admin-add-item" class="nav-btn primary">
+            + Tambah Baru
+          </button>
+          <button type="button" id="btn-admin-logout" class="nav-btn" style="font-size: 9.5px; color: #ff6b6b; border-color: rgba(220,53,69,0.35);">
+            Keluar
+          </button>
+          <button type="button" id="btn-admin-close" class="btn-icon" aria-label="Tutup Admin Panel" style="margin-left: 0.5rem;">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Admin Tabs: Kelola Foto vs Kelola Album -->
+      <div class="admin-tabs">
+        <button type="button" id="tab-btn-photos" class="admin-tab-btn active">📷 Kelola Foto</button>
+        <button type="button" id="tab-btn-albums" class="admin-tab-btn">📁 Kelola Album</button>
+      </div>
+
+      <!-- Admin Content Area -->
+      <div class="admin-content-area">
+        <!-- ==================== TAB 1: FOTO ==================== -->
+        <div id="admin-tab-photos-content">
+          <!-- Sub-View: Photo List -->
+          <div id="admin-photo-list-view">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+              <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Daftar Plat Foto Terpasang</span>
+              <button type="button" id="btn-photo-list-add" class="nav-btn primary" style="font-size: 10px; padding: 0.4rem 0.85rem;">+ Tambah Foto Baru</button>
+            </div>
+            <div id="admin-photo-container" class="admin-photo-list"></div>
+          </div>
+
+          <!-- Sub-View: Photo Form (Add/Edit) -->
+          <div id="admin-photo-form-view" style="display: none;">
+            <h3 id="photo-form-heading" class="form-title">Tambah / Ubah Foto</h3>
+            <p class="form-desc">Tentukan album, orientasi, dan keterangan lengkap untuk memposisikan karya foto dalam pameran sinematik.</p>
+
+            <form id="admin-photo-form">
+              <input type="hidden" id="admin-edit-photo-id" value="" />
+
+              <!-- Live Image Preview Box -->
+              <div class="form-preview-box" id="photo-preview-box">
+                <span class="form-preview-placeholder">Pratinjau Gambar Foto</span>
+              </div>
+
+              <!-- Orientation Selector -->
+              <div class="form-group">
+                <label>Orientasi Foto</label>
+                <div class="orientation-selector">
+                  <label class="orient-option" id="opt-orient-landscape">
+                    <input type="radio" name="photo-orient" value="landscape" checked />
+                    <div>
+                      <div class="orient-title">Landscape (Horizontal)</div>
+                      <div class="orient-desc">Layar penuh sinema 16:9 / 2.39:1</div>
+                    </div>
+                  </label>
+                  <label class="orient-option" id="opt-orient-portrait">
+                    <input type="radio" name="photo-orient" value="portrait" />
+                    <div>
+                      <div class="orient-title">Portrait (Vertikal)</div>
+                      <div class="orient-desc">Bingkai matte 4:5 dengan ambient glow</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Album Selector in Photo Form -->
+              <div class="form-group">
+                <label for="admin-photo-album-select">Pilih Album / Seri Koleksi</label>
+                <select id="admin-photo-album-select" class="form-control" style="background:#1a1917; cursor:pointer;"></select>
+              </div>
+
+              <div class="form-group">
+                <label for="admin-file-input">Pilih File Foto Lokal (Komputer)</label>
+                <input type="file" id="admin-file-input" accept="image/*" class="form-control" />
+              </div>
+
+              <div class="form-group">
+                <label for="admin-url-input">Atau Masukkan URL Gambar (Opsional)</label>
+                <input type="url" id="admin-url-input" placeholder="https://images.unsplash.com/..." class="form-control" />
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="admin-title-input">Judul Foto</label>
+                  <input type="text" id="admin-title-input" required placeholder="Contoh: SHADOW & SOLITUDE" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label for="admin-year-input">Tahun Pembuatan</label>
+                  <input type="text" id="admin-year-input" value="2026" class="form-control" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="admin-category-input">Kategori / Genre</label>
+                  <input type="text" id="admin-category-input" required placeholder="EDITORIAL PORTRAIT / DOCUMENTARY" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label for="admin-director-input">Fotografer / Artis</label>
+                  <input type="text" id="admin-director-input" value="PBYL CINEMA" class="form-control" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="admin-desc-input">Sinopsis / Keterangan Cerita</label>
+                <textarea id="admin-desc-input" rows="3" class="form-control" placeholder="Tuliskan latar belakang, esensi pencahayaan, atau emosi yang ingin disampaikan..."></textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="admin-format-input">Format Kamera / Alat</label>
+                  <input type="text" id="admin-format-input" placeholder="HASSELBLAD / 35MM FILM / LEICA M6" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label for="admin-aspect-input">Rasio Aspek</label>
+                  <input type="text" id="admin-aspect-input" placeholder="4:5 PORTRAIT / 2.39:1 CINEMA" class="form-control" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="admin-filmcode-input">Kode Roll Film (Rebate Text)</label>
+                  <input type="text" id="admin-filmcode-input" placeholder="KODAK 5219 · 188 0214" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label for="admin-award-label">Label Penghargaan / Kurasi</label>
+                  <input type="text" id="admin-award-label" placeholder="CURATOR'S CHOICE / GOLDEN EYE" class="form-control" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="admin-quote-input">Kutipan Kuratorial / Quote Penghargaan</label>
+                <input type="text" id="admin-quote-input" placeholder="Contoh: MESMERIZING STILLNESS / POETRY IN SHADOW" class="form-control" />
+              </div>
+
+              <div class="form-actions">
+                <button type="button" id="btn-cancel-photo-form" class="btn-secondary">Kembali ke Daftar</button>
+                <button type="submit" class="btn-primary">Simpan Foto</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ==================== TAB 2: ALBUM ==================== -->
+        <div id="admin-tab-albums-content" style="display: none;">
+          <!-- Sub-View: Album List -->
+          <div id="admin-album-list-view">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+              <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Daftar Koleksi Album & Seri</span>
+              <button type="button" id="btn-album-list-add" class="nav-btn primary" style="font-size: 10px; padding: 0.4rem 0.85rem;">+ Buat Album Baru</button>
+            </div>
+            <div id="admin-album-container" class="admin-album-list"></div>
+          </div>
+
+          <!-- Sub-View: Album Form (Add/Edit) -->
+          <div id="admin-album-form-view" style="display: none;">
+            <h3 id="album-form-heading" class="form-title">Tambah / Ubah Album</h3>
+            <p class="form-desc">Kelompokkan foto-foto dalam satu payung tema visual, lokasi, atau seri proyek fotografi.</p>
+
+            <form id="admin-album-form">
+              <input type="hidden" id="admin-edit-album-id" value="" />
+
+              <!-- Live Image Preview Box for Album Cover -->
+              <div class="form-preview-box" id="album-preview-box">
+                <span class="form-preview-placeholder">Pratinjau Sampul Album</span>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="admin-album-title">Nama Album / Seri</label>
+                  <input type="text" id="admin-album-title" required placeholder="Contoh: Nocturnes in Kyoto" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label for="admin-album-subtitle">Sub-Judul / Tagline</label>
+                  <input type="text" id="admin-album-subtitle" placeholder="Medium Format Nocturnal Studies" class="form-control" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="admin-album-year">Tahun Proyek</label>
+                  <input type="text" id="admin-album-year" value="2026" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label for="admin-album-location">Lokasi Pengambilan</label>
+                  <input type="text" id="admin-album-location" placeholder="Kyoto · Tokyo" class="form-control" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="admin-album-file-input">Pilih File Sampul Lokal (Komputer)</label>
+                <input type="file" id="admin-album-file-input" accept="image/*" class="form-control" />
+              </div>
+
+              <div class="form-group">
+                <label for="admin-album-cover">Atau Masukkan URL Gambar Sampul</label>
+                <input type="url" id="admin-album-cover" placeholder="https://images.unsplash.com/..." class="form-control" />
+              </div>
+
+              <div class="form-group">
+                <label for="admin-album-film">Jenis Film / Kamera Utama</label>
+                <input type="text" id="admin-album-film" placeholder="KODAK TRI-X 400 · 120 FILM" class="form-control" />
+              </div>
+
+              <div class="form-group">
+                <label for="admin-album-note">Catatan Kuratorial / Cerita Seri</label>
+                <textarea id="admin-album-note" rows="3" class="form-control" placeholder="Tuliskan latar belakang tema, tujuan artistik, atau cerita di balik seri album ini..."></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" id="btn-cancel-album-form" class="btn-secondary">Kembali ke Daftar</button>
+                <button type="submit" class="btn-primary">Simpan Album</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Controller Application Script -->
+  <script type="module">
+    import { CinemaReelApp } from "./js/cinema-reel.js";
+    import {
+      loadSlides,
+      loadAlbums,
+      addCustomSlide,
+      updateSlide,
+      deleteSlide,
+      reorderSlide,
+      createAlbum,
+      updateAlbum,
+      deleteAlbum,
+      resetToDefaultSlides,
+      getSlideImageUrl
+    } from "./js/portfolio-manager.js";
+
+    // Initialize the Cinema Reel Engine
+    let app = new CinemaReelApp();
+    app.init();
+
+    // DOM References
+    const toggleViewBtn = document.getElementById("btn-toggle-view");
+    const viewModeLabel = document.getElementById("view-mode-label");
+    const galleryView = document.getElementById("gallery-view");
+    const galleryGrid = document.getElementById("gallery-grid");
+    const galleryAlbumsContainer = document.getElementById("gallery-albums-container");
+
+    const btnAlbumSelect = document.getElementById("btn-album-select");
+    const albumDropdownMenu = document.getElementById("album-dropdown-menu");
+    const currentAlbumLabel = document.getElementById("current-album-label");
+
+    const aspectButtons = document.querySelectorAll(".aspect-btn");
+
+    const openAdminBtn = document.getElementById("btn-open-admin");
+    const quickAddBtn = document.getElementById("btn-quick-add");
+    const adminModal = document.getElementById("admin-panel-modal");
+    const adminCloseBtn = document.getElementById("btn-admin-close");
+    const adminAddItemBtn = document.getElementById("btn-admin-add-item");
+    const adminResetBtn = document.getElementById("btn-admin-reset");
+    const btnAdminLogout = document.getElementById("btn-admin-logout");
+    const btnAdminChangePass = document.getElementById("btn-admin-change-pass");
+
+    const adminLoginModal = document.getElementById("admin-login-modal");
+    const adminLoginForm = document.getElementById("admin-login-form");
+    const adminLoginPass = document.getElementById("admin-login-pass");
+    const adminLoginError = document.getElementById("admin-login-error");
+    const btnLoginClose = document.getElementById("btn-login-close");
+    const btnTogglePass = document.getElementById("btn-toggle-pass");
+
+    const tabBtnPhotos = document.getElementById("tab-btn-photos");
+    const tabBtnAlbums = document.getElementById("tab-btn-albums");
+    const tabPhotosContent = document.getElementById("admin-tab-photos-content");
+    const tabAlbumsContent = document.getElementById("admin-tab-albums-content");
+
+    const adminPhotoListView = document.getElementById("admin-photo-list-view");
+    const adminPhotoFormView = document.getElementById("admin-photo-form-view");
+    const adminPhotoContainer = document.getElementById("admin-photo-container");
+
+    const adminAlbumListView = document.getElementById("admin-album-list-view");
+    const adminAlbumFormView = document.getElementById("admin-album-form-view");
+    const adminAlbumContainer = document.getElementById("admin-album-container");
+
+    // Photo Form References
+    const adminPhotoForm = document.getElementById("admin-photo-form");
+    const cancelPhotoFormBtn = document.getElementById("btn-cancel-photo-form");
+    const photoFormHeading = document.getElementById("photo-form-heading");
+    const adminEditPhotoId = document.getElementById("admin-edit-photo-id");
+    const adminFileInput = document.getElementById("admin-file-input");
+    const adminUrlInput = document.getElementById("admin-url-input");
+    const photoPreviewBox = document.getElementById("photo-preview-box");
+    const adminPhotoAlbumSelect = document.getElementById("admin-photo-album-select");
+
+    const optOrientLandscape = document.getElementById("opt-orient-landscape");
+    const optOrientPortrait = document.getElementById("opt-orient-portrait");
+    const radioLandscape = optOrientLandscape.querySelector("input");
+    const radioPortrait = optOrientPortrait.querySelector("input");
+
+    // Album Form References
+    const adminAlbumForm = document.getElementById("admin-album-form");
+    const cancelAlbumFormBtn = document.getElementById("btn-cancel-album-form");
+    const albumFormHeading = document.getElementById("album-form-heading");
+    const adminEditAlbumId = document.getElementById("admin-edit-album-id");
+    const adminAlbumFileInput = document.getElementById("admin-album-file-input");
+    const adminAlbumCoverInput = document.getElementById("admin-album-cover");
+    const albumPreviewBox = document.getElementById("album-preview-box");
+    const btnPhotoListAdd = document.getElementById("btn-photo-list-add");
+    const btnAlbumListAdd = document.getElementById("btn-album-list-add");
+
+    let isGalleryMode = false;
+    let currentPhotoPreviewUrl = "";
+    let currentAlbumPreviewUrl = "";
+    let activeAdminTab = "photos"; // 'photos' | 'albums'
+
+    // ========================================================================
+    // ALBUM SELECTOR (Header Navbar Dropdown)
+    // ========================================================================
+    function renderAlbumDropdown() {
+      const albums = loadAlbums();
+      const allSlides = loadSlides();
+
+      albumDropdownMenu.innerHTML = `
+        <div class="album-dropdown-item ${app.activeAlbumId === "all" ? "active" : ""}" data-album="all">
+          <div class="album-dropdown-title">SEMUA SERI FOTO</div>
+          <div class="album-dropdown-meta">${allSlides.length} Plates &middot; Arsip Lengkap</div>
+        </div>
+      `;
+
+      albums.forEach((album) => {
+        const count = allSlides.filter((s) => s.albumId === album.id).length;
+        const item = document.createElement("div");
+        item.className = `album-dropdown-item ${app.activeAlbumId === album.id ? "active" : ""}`;
+        item.dataset.album = album.id;
+        item.innerHTML = `
+          <div class="album-dropdown-title">${album.title}</div>
+          <div class="album-dropdown-meta">${count} Plates &middot; ${album.year} &middot; ${album.filmStock.split("·")[0]}</div>
+        `;
+        albumDropdownMenu.appendChild(item);
+      });
+
+      // Bind click on items
+      albumDropdownMenu.querySelectorAll(".album-dropdown-item").forEach((el) => {
+        el.addEventListener("click", () => {
+          const selectedAlbumId = el.dataset.album;
+          selectAlbum(selectedAlbumId);
+          albumDropdownMenu.classList.remove("active");
+        });
+      });
+    }
+
+    function selectAlbum(albumId) {
+      const albums = loadAlbums();
+      if (albumId === "all") {
+        currentAlbumLabel.textContent = "SEMUA SERI";
+      } else {
+        const found = albums.find((a) => a.id === albumId);
+        currentAlbumLabel.textContent = found ? found.title.toUpperCase() : "SEMUA SERI";
+      }
+      app.filterByAlbum(albumId);
+      renderAlbumDropdown();
+      if (isGalleryMode) renderGalleryView();
+    }
+
+    btnAlbumSelect.addEventListener("click", (e) => {
+      e.stopPropagation();
+      albumDropdownMenu.classList.toggle("active");
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".album-selector-box")) {
+        albumDropdownMenu.classList.remove("active");
+      }
+    });
+
+    // ========================================================================
+    // ASPECT RATIO CONSOLE
+    // ========================================================================
+    aspectButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        aspectButtons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        const ratio = btn.dataset.ratio;
+        app.setAspectMask(ratio);
+      });
+    });
+
+    // ========================================================================
+    // GALLERY VIEW (Albums Cards + Photo Grid)
+    // ========================================================================
+    toggleViewBtn.addEventListener("click", () => {
+      isGalleryMode = !isGalleryMode;
+      if (isGalleryMode) {
+        renderGalleryView();
+        galleryView.classList.add("active");
+        viewModeLabel.textContent = "Cinema Reel";
+      } else {
+        galleryView.classList.remove("active");
+        viewModeLabel.textContent = "Katalog Galeri";
+      }
+    });
+
+    function renderGalleryView() {
+      const albums = loadAlbums();
+      const allSlides = loadSlides();
+
+      // 1. Render Albums Row
+      galleryAlbumsContainer.innerHTML = "";
+      albums.forEach((album) => {
+        const count = allSlides.filter((s) => s.albumId === album.id).length;
+        const card = document.createElement("div");
+        card.className = "album-cover-card";
+        card.innerHTML = `
+          <img src="${album.coverImage}" alt="${album.title}" loading="lazy" />
+          <div class="album-card-count">${count} PLATES</div>
+          <div class="album-card-overlay">
+            <div class="album-card-title">${album.title}</div>
+            <div class="album-card-meta">${album.year} &middot; ${album.location} &middot; ${album.filmStock.split("·")[0]}</div>
+          </div>
+        `;
+        card.addEventListener("click", () => {
+          selectAlbum(album.id);
+          isGalleryMode = false;
+          galleryView.classList.remove("active");
+          viewModeLabel.textContent = "Katalog Galeri";
+        });
+        galleryAlbumsContainer.appendChild(card);
+      });
+
+      // 2. Render Photos Grid
+      const visibleSlides = app.activeAlbumId === "all" ? allSlides : allSlides.filter((s) => s.albumId === app.activeAlbumId);
+      galleryGrid.innerHTML = "";
+      visibleSlides.forEach((slide, idx) => {
+        const isPortrait = slide.orientation === "portrait";
+        const card = document.createElement("div");
+        card.className = `gallery-card ${isPortrait ? "is-portrait-card" : ""}`;
+        card.innerHTML = `
+          <img src="${getSlideImageUrl(slide, 800, 500)}" alt="${slide.titleLines.join(" ")}" loading="lazy" />
+          <div class="gallery-card-overlay">
+            <div class="gallery-card-title">${slide.titleLines.join(" ")}</div>
+            <div class="gallery-card-meta">
+              ${slide.category} &middot; ${slide.year}
+              ${isPortrait ? '<span class="tag-portrait-badge">PORTRAIT</span>' : ""}
+            </div>
+          </div>
+        `;
+        card.addEventListener("click", () => {
+          isGalleryMode = false;
+          galleryView.classList.remove("active");
+          viewModeLabel.textContent = "Katalog Galeri";
+          app.navigateToMod(idx);
+        });
+        galleryGrid.appendChild(card);
+      });
+    }
+
+    // ========================================================================
+    // ADMIN AUTHENTICATION & LOGIN CONTROLLER
+    // ========================================================================
+    function getAdminPassword() {
+      const stored = localStorage.getItem("pbyl_admin_password");
+      if (!stored || stored === "pbyl123") {
+        localStorage.setItem("pbyl_admin_password", "Mufidz69");
+        return "Mufidz69";
+      }
+      return stored;
+    }
+
+    function isAdminLoggedIn() {
+      return sessionStorage.getItem("pbyl_admin_session") === "true";
+    }
+
+    function openAdminGate() {
+      if (isAdminLoggedIn()) {
+        openAdminPanel();
+      } else {
+        openLoginModal();
+      }
+    }
+
+    function openLoginModal() {
+      adminLoginForm.reset();
+      adminLoginError.style.display = "none";
+      adminLoginPass.type = "password";
+      btnTogglePass.textContent = "👁";
+      adminLoginModal.classList.add("active");
+      setTimeout(() => {
+        adminLoginPass.focus();
+      }, 150);
+    }
+
+    function closeLoginModal() {
+      adminLoginModal.classList.remove("active");
+      adminLoginForm.reset();
+      adminLoginError.style.display = "none";
+    }
+
+    btnLoginClose.addEventListener("click", closeLoginModal);
+    adminLoginModal.addEventListener("click", (e) => {
+      if (e.target === adminLoginModal) closeLoginModal();
+    });
+
+    btnTogglePass.addEventListener("click", () => {
+      if (adminLoginPass.type === "password") {
+        adminLoginPass.type = "text";
+        btnTogglePass.textContent = "🔒";
+        btnTogglePass.title = "Sembunyikan kata sandi";
+      } else {
+        adminLoginPass.type = "password";
+        btnTogglePass.textContent = "👁";
+        btnTogglePass.title = "Lihat kata sandi";
+      }
+    });
+
+    adminLoginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const enteredPass = adminLoginPass.value.trim();
+      const actualPass = getAdminPassword();
+
+      if (enteredPass === actualPass) {
+        sessionStorage.setItem("pbyl_admin_session", "true");
+        closeLoginModal();
+        openAdminPanel();
+      } else {
+        adminLoginError.style.display = "block";
+        adminLoginError.textContent = "Kata sandi salah. Silakan periksa kembali.";
+        adminLoginPass.focus();
+        adminLoginPass.select();
+      }
+    });
+
+    // Logout and Change Password
+    btnAdminLogout.addEventListener("click", () => {
+      sessionStorage.removeItem("pbyl_admin_session");
+      closeAdminPanel();
+      alert("Anda telah keluar dari Admin Panel.");
+    });
+
+    btnAdminChangePass.addEventListener("click", () => {
+      const current = getAdminPassword();
+      const oldInput = prompt("Masukkan kata sandi saat ini:");
+      if (oldInput === null) return;
+      if (oldInput !== current) {
+        alert("Kata sandi lama tidak cocok!");
+        return;
+      }
+      const newPass = prompt("Masukkan kata sandi baru (minimal 4 karakter):");
+      if (newPass === null) return;
+      if (!newPass.trim() || newPass.trim().length < 4) {
+        alert("Gagal: Kata sandi baru harus memiliki minimal 4 karakter.");
+        return;
+      }
+      localStorage.setItem("pbyl_admin_password", newPass.trim());
+      alert("Berhasil! Kata sandi Admin Panel telah diubah menjadi: " + newPass.trim());
+    });
+
+    // ========================================================================
+    // ADMIN PANEL CONTROLLER (Tabs & CRUD)
+    // ========================================================================
+    function openAdminPanel() {
+      renderAdminList();
+      renderAdminAlbumList();
+      switchAdminTab(activeAdminTab);
+      adminModal.classList.add("active");
+    }
+
+    function closeAdminPanel() {
+      adminModal.classList.remove("active");
+    }
+
+    if (openAdminBtn) openAdminBtn.addEventListener("click", openAdminGate);
+    adminCloseBtn.addEventListener("click", closeAdminPanel);
+    adminModal.addEventListener("click", (e) => {
+      if (e.target === adminModal) closeAdminPanel();
+    });
+
+    // Discreet Admin Triggers:
+    // 1. Double-click or multi-tap on the Brand Logo (PBYL Cinema)
+    const brandTrigger = document.getElementById("brand-badge-trigger");
+    if (brandTrigger) {
+      let brandClicks = 0;
+      let brandTimer = null;
+      brandTrigger.addEventListener("click", () => {
+        brandClicks++;
+        clearTimeout(brandTimer);
+        brandTimer = setTimeout(() => {
+          if (brandClicks >= 2) {
+            openAdminGate();
+          }
+          brandClicks = 0;
+        }, 350);
+      });
+    }
+
+    // 2. Keyboard Shortcut: Shift + A or Ctrl + Shift + A or Alt + A (when not typing in form)
+    window.addEventListener("keydown", (e) => {
+      const isInput = document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA");
+      if (!isInput && (
+        (e.key === "A" || e.key === "a") && (e.shiftKey || e.altKey || e.ctrlKey)
+      )) {
+        e.preventDefault();
+        if (adminModal.classList.contains("active")) {
+          closeAdminPanel();
+        } else if (adminLoginModal.classList.contains("active")) {
+          closeLoginModal();
+        } else {
+          openAdminGate();
+        }
+      }
+      if (e.key === "Escape") {
+        if (adminModal.classList.contains("active")) closeAdminPanel();
+        if (adminLoginModal.classList.contains("active")) closeLoginModal();
+      }
+    });
+
+    // 3. URL Hash #admin (e.g. localhost:8080/#admin)
+    function checkHashForAdmin() {
+      if (window.location.hash === "#admin") {
+        openAdminGate();
+      }
+    }
+    window.addEventListener("hashchange", checkHashForAdmin);
+    checkHashForAdmin();
+
+    if (quickAddBtn) {
+      quickAddBtn.addEventListener("click", () => {
+        openAdminPanel();
+        switchAdminTab("photos");
+        openAddPhotoForm();
+      });
+    }
+
+    // Admin Tabs Switcher
+    function switchAdminTab(tab) {
+      activeAdminTab = tab;
+      if (tab === "photos") {
+        tabBtnPhotos.classList.add("active");
+        tabBtnAlbums.classList.remove("active");
+        tabPhotosContent.style.display = "block";
+        tabAlbumsContent.style.display = "none";
+        showPhotoListView();
+      } else {
+        tabBtnAlbums.classList.add("active");
+        tabBtnPhotos.classList.remove("active");
+        tabAlbumsContent.style.display = "block";
+        tabPhotosContent.style.display = "none";
+        showAlbumListView();
+      }
+    }
+
+    tabBtnPhotos.addEventListener("click", () => switchAdminTab("photos"));
+    tabBtnAlbums.addEventListener("click", () => switchAdminTab("albums"));
+
+    adminAddItemBtn.addEventListener("click", () => {
+      if (activeAdminTab === "photos") openAddPhotoForm();
+      else openAddAlbumForm();
+    });
+
+    // --- PHOTO SUB-VIEWS ---
+    function showPhotoListView() {
+      adminPhotoListView.style.display = "block";
+      adminPhotoFormView.style.display = "none";
+    }
+    function showPhotoFormView() {
+      adminPhotoListView.style.display = "none";
+      adminPhotoFormView.style.display = "block";
+    }
+    cancelPhotoFormBtn.addEventListener("click", showPhotoListView);
+
+    // --- ALBUM SUB-VIEWS ---
+    function showAlbumListView() {
+      adminAlbumListView.style.display = "block";
+      adminAlbumFormView.style.display = "none";
+    }
+    function showAlbumFormView() {
+      adminAlbumListView.style.display = "none";
+      adminAlbumFormView.style.display = "block";
+    }
+    cancelAlbumFormBtn.addEventListener("click", showAlbumListView);
+
+    // Orientation Radio Toggle
+    function updateOrientRadioStyles() {
+      if (radioPortrait.checked) {
+        optOrientPortrait.classList.add("selected");
+        optOrientLandscape.classList.remove("selected");
+      } else {
+        optOrientLandscape.classList.add("selected");
+        optOrientPortrait.classList.remove("selected");
+      }
+    }
+    radioLandscape.addEventListener("change", updateOrientRadioStyles);
+    radioPortrait.addEventListener("change", updateOrientRadioStyles);
+
+    // Populate Album Options in Photo Form
+    function populatePhotoAlbumSelect(selectedId = "") {
+      const albums = loadAlbums();
+      adminPhotoAlbumSelect.innerHTML = "";
+      albums.forEach((album) => {
+        const opt = document.createElement("option");
+        opt.value = album.id;
+        opt.textContent = `${album.title} (${album.year})`;
+        if (album.id === selectedId) opt.selected = true;
+        adminPhotoAlbumSelect.appendChild(opt);
+      });
+    }
+
+    // --- RENDER ADMIN PHOTO LIST ---
+    function renderAdminList() {
+      const slides = loadSlides();
+      const albums = loadAlbums();
+      adminPhotoContainer.innerHTML = "";
+
+      slides.forEach((slide, index) => {
+        const isPortrait = slide.orientation === "portrait";
+        const album = albums.find((a) => a.id === slide.albumId);
+        const albumName = album ? album.title : "Unassigned";
+
+        const row = document.createElement("div");
+        row.className = "admin-photo-row";
+        row.innerHTML = `
+          <div class="admin-thumb ${isPortrait ? "portrait" : ""}">
+            <img src="${getSlideImageUrl(slide, 160, 120)}" alt="" />
+          </div>
+          <div class="admin-info">
+            <div class="admin-info-title">${slide.titleLines.join(" ")}</div>
+            <div class="admin-info-meta">
+              <span style="color:var(--film-gold);">${albumName}</span>
+              <span>&middot;</span>
+              <span>${slide.category}</span>
+              <span>&middot;</span>
+              <span>${slide.year}</span>
+              <span>&middot;</span>
+              <span class="badge-orient ${isPortrait ? "portrait" : "landscape"}">${isPortrait ? "Portrait" : "Landscape"}</span>
+            </div>
+          </div>
+          <div class="admin-actions">
+            <button type="button" class="btn-icon btn-up" title="Pindah ke Atas" ${index === 0 ? "disabled style='opacity:0.3;cursor:not-allowed;'" : ""}>↑</button>
+            <button type="button" class="btn-icon btn-down" title="Pindah ke Bawah" ${index === slides.length - 1 ? "disabled style='opacity:0.3;cursor:not-allowed;'" : ""}>↓</button>
+            <button type="button" class="btn-icon btn-edit" title="Ubah Data">✏️</button>
+            <button type="button" class="btn-icon delete btn-delete" title="Hapus Foto">🗑️</button>
+          </div>
+        `;
+
+        row.querySelector(".btn-up").addEventListener("click", () => {
+          const updated = reorderSlide(slide.id, "up");
+          app.reloadSlides(updated);
+          renderAdminList();
+          if (isGalleryMode) renderGalleryView();
+        });
+
+        row.querySelector(".btn-down").addEventListener("click", () => {
+          const updated = reorderSlide(slide.id, "down");
+          app.reloadSlides(updated);
+          renderAdminList();
+          if (isGalleryMode) renderGalleryView();
+        });
+
+        row.querySelector(".btn-edit").addEventListener("click", () => {
+          openEditPhotoForm(slide);
+        });
+
+        row.querySelector(".btn-delete").addEventListener("click", () => {
+          if (confirm(`Hapus foto "${slide.titleLines.join(" ")}" dari portofolio?`)) {
+            const updated = deleteSlide(slide.id);
+            app.reloadSlides(updated);
+            renderAdminList();
+            renderAlbumDropdown();
+            if (isGalleryMode) renderGalleryView();
+          }
+        });
+
+        adminPhotoContainer.appendChild(row);
+      });
+    }
+
+    // --- RENDER ADMIN ALBUM LIST ---
+    function renderAdminAlbumList() {
+      const albums = loadAlbums();
+      const allSlides = loadSlides();
+      adminAlbumContainer.innerHTML = "";
+
+      albums.forEach((album) => {
+        const count = allSlides.filter((s) => s.albumId === album.id).length;
+        const row = document.createElement("div");
+        row.className = "admin-photo-row";
+        row.innerHTML = `
+          <div class="admin-thumb">
+            <img src="${album.coverImage}" alt="" />
+          </div>
+          <div class="admin-info">
+            <div class="admin-info-title">${album.title}</div>
+            <div class="admin-info-meta">
+              <span>${count} Plates</span>
+              <span>&middot;</span>
+              <span>${album.year}</span>
+              <span>&middot;</span>
+              <span>${album.location}</span>
+              <span>&middot;</span>
+              <span style="color:var(--film-gold);">${album.filmStock}</span>
+            </div>
+          </div>
+          <div class="admin-actions">
+            <button type="button" class="btn-icon btn-edit-album" title="Ubah Album">✏️</button>
+            <button type="button" class="btn-icon delete btn-delete-album" title="Hapus Album">🗑️</button>
+          </div>
+        `;
+
+        row.querySelector(".btn-edit-album").addEventListener("click", () => {
+          openEditAlbumForm(album);
+        });
+
+        row.querySelector(".btn-delete-album").addEventListener("click", () => {
+          if (confirm(`Hapus album "${album.title}"? Foto di dalamnya akan dipindahkan ke album lain.`)) {
+            deleteAlbum(album.id);
+            renderAdminAlbumList();
+            renderAdminList();
+            renderAlbumDropdown();
+            if (isGalleryMode) renderGalleryView();
+          }
+        });
+
+        adminAlbumContainer.appendChild(row);
+      });
+    }
+
+    // Reset to defaults
+    adminResetBtn.addEventListener("click", () => {
+      if (confirm("Kembalikan seluruh album dan koleksi foto ke pengaturan bawaan awal?")) {
+        const { slides } = resetToDefaultSlides();
+        app.reloadSlides(slides);
+        renderAdminList();
+        renderAdminAlbumList();
+        renderAlbumDropdown();
+        if (isGalleryMode) renderGalleryView();
+      }
+    });
+
+    // Quick Add Buttons in Photo and Album List headers
+    if (btnPhotoListAdd) btnPhotoListAdd.addEventListener("click", openAddPhotoForm);
+    if (btnAlbumListAdd) btnAlbumListAdd.addEventListener("click", openAddAlbumForm);
+
+    // --- OPEN PHOTO FORM (Add vs Edit) ---
+    function openAddPhotoForm() {
+      adminPhotoForm.reset();
+      adminEditPhotoId.value = "";
+      photoFormHeading.textContent = "Tambah Foto Baru";
+      radioLandscape.checked = true;
+      updateOrientRadioStyles();
+      populatePhotoAlbumSelect();
+      currentPhotoPreviewUrl = "";
+      document.getElementById("admin-quote-input").value = "";
+      photoPreviewBox.innerHTML = `<span class="form-preview-placeholder">Pilih file atau masukkan URL gambar</span>`;
+      showPhotoFormView();
+    }
+
+    function openEditPhotoForm(slide) {
+      adminEditPhotoId.value = slide.id;
+      photoFormHeading.textContent = `Ubah Foto: ${slide.titleLines.join(" ")}`;
+      populatePhotoAlbumSelect(slide.albumId);
+
+      document.getElementById("admin-title-input").value = slide.titleLines.join(" ");
+      document.getElementById("admin-year-input").value = slide.year || "2026";
+      document.getElementById("admin-category-input").value = slide.category || "";
+      document.getElementById("admin-director-input").value = slide.director || "PBYL CINEMA";
+      document.getElementById("admin-desc-input").value = slide.description || "";
+      document.getElementById("admin-format-input").value = slide.stats?.format || "";
+      document.getElementById("admin-aspect-input").value = slide.stats?.aspect || "";
+      document.getElementById("admin-filmcode-input").value = slide.filmCode || "";
+      document.getElementById("admin-award-label").value = slide.awards?.[0]?.label || "";
+      document.getElementById("admin-quote-input").value = slide.awards?.[0]?.quote || "";
+
+      if (slide.customUrl) {
+        adminUrlInput.value = slide.customUrl.startsWith("data:") ? "" : slide.customUrl;
+      } else {
+        adminUrlInput.value = slide.imageId ? `https://images.unsplash.com/photo-${slide.imageId}?w=1920&h=1080` : "";
+      }
+
+      if (slide.orientation === "portrait") radioPortrait.checked = true;
+      else radioLandscape.checked = true;
+      updateOrientRadioStyles();
+
+      currentPhotoPreviewUrl = getSlideImageUrl(slide, 800, 500);
+      photoPreviewBox.innerHTML = `<img src="${currentPhotoPreviewUrl}" alt="Preview" />`;
+      showPhotoFormView();
+    }
+
+    // Image Live Preview & Aspect Auto-Detection
+    adminUrlInput.addEventListener("input", (e) => {
+      const url = e.target.value.trim();
+      if (url) {
+        currentPhotoPreviewUrl = url;
+        photoPreviewBox.innerHTML = `<img src="${url}" alt="Preview" />`;
+        autoDetectImageAspect(url);
+      }
+    });
+
+    adminFileInput.addEventListener("change", async (e) => {
+      if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        const dataUrl = await readFileAsDataUrl(file);
+        currentPhotoPreviewUrl = dataUrl;
+        photoPreviewBox.innerHTML = `<img src="${dataUrl}" alt="Preview" />`;
+        autoDetectImageAspect(dataUrl);
+      }
+    });
+
+    function autoDetectImageAspect(src) {
+      const testImg = new Image();
+      testImg.onload = () => {
+        if (testImg.naturalHeight > testImg.naturalWidth) {
+          radioPortrait.checked = true;
+          document.getElementById("admin-aspect-input").value = "4:5 PORTRAIT";
+        } else {
+          radioLandscape.checked = true;
+          document.getElementById("admin-aspect-input").value = "2.39:1 CINEMA";
+        }
+        updateOrientRadioStyles();
+      };
+      testImg.src = src;
+    }
+
+    // Submit Photo Form
+    adminPhotoForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const editId = adminEditPhotoId.value;
+      const titleInput = document.getElementById("admin-title-input").value.trim();
+      const yearInput = document.getElementById("admin-year-input").value.trim() || "2026";
+      const categoryInput = document.getElementById("admin-category-input").value.trim() || "FINE ART";
+      const directorInput = document.getElementById("admin-director-input").value.trim() || "PBYL CINEMA";
+      const descInput = document.getElementById("admin-desc-input").value.trim() || "Eksplorasi visual tentang ruang, hening, dan pergerakan cahaya.";
+      const formatInput = document.getElementById("admin-format-input").value.trim() || "35MM CINEMA";
+      const aspectInput = document.getElementById("admin-aspect-input").value.trim() || (radioPortrait.checked ? "4:5 PORTRAIT" : "2.39:1");
+      const filmCodeInput = document.getElementById("admin-filmcode-input").value.trim() || "KODAK 5219 · 188 0214";
+      const awardLabel = document.getElementById("admin-award-label").value.trim() || "CURATOR SELECTION";
+      const quoteInput = document.getElementById("admin-quote-input").value.trim() || "MESMERIZING STILLNESS";
+      const albumId = adminPhotoAlbumSelect.value;
+      const orientation = radioPortrait.checked ? "portrait" : "landscape";
+
+      const words = titleInput.split(" ");
+      let titleLines = [titleInput];
+      if (words.length >= 2) {
+        const half = Math.ceil(words.length / 2);
+        titleLines = [words.slice(0, half).join(" "), words.slice(half).join(" ")];
+      }
+
+      let finalImgUrl = currentPhotoPreviewUrl;
+      if (adminFileInput.files && adminFileInput.files[0]) {
+        finalImgUrl = await readFileAsDataUrl(adminFileInput.files[0]);
+      } else if (adminUrlInput.value.trim()) {
+        finalImgUrl = adminUrlInput.value.trim();
+      }
+
+      if (!finalImgUrl) {
+        finalImgUrl = orientation === "portrait"
+          ? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&h=1600&fit=crop&q=75&auto=format"
+          : "https://images.unsplash.com/photo-1610847455028-9e55e62bac33?w=1920&h=1080&fit=crop&q=75&auto=format";
+      }
+
+      if (editId) {
+        const updatedData = {
+          titleLines,
+          year: yearInput,
+          category: categoryInput,
+          director: directorInput,
+          description: descInput,
+          orientation,
+          albumId,
+          filmCode: filmCodeInput,
+          customUrl: finalImgUrl,
+          stats: {
+            critics: 96,
+            audience: 92,
+            runtime: orientation === "portrait" ? "PORTRAIT SERIES" : "PHOTO ESSAY",
+            format: formatInput,
+            country: "INDONESIA",
+            language: "SILENT",
+            aspect: aspectInput
+          },
+          awards: [
+            { stars: 5, label: awardLabel, quote: quoteInput },
+            { stars: 5, label: "EXCELLENCE IN CRAFT", quote: "CAPTIVATING TEXTURE" },
+            { stars: 4, label: "HONORABLE MENTION", quote: "PURE VISION" }
+          ]
+        };
+        const updatedList = updateSlide(editId, updatedData);
+        app.reloadSlides(updatedList);
+      } else {
+        const newSlide = {
+          id: "custom-" + Date.now(),
+          albumId,
+          badge: "pbyl.reel",
+          orientation,
+          eyebrow: `${categoryInput} · EXHIBITION ${yearInput}`,
+          category: categoryInput,
+          titleLines,
+          year: yearInput,
+          director: directorInput,
+          filmCode: filmCodeInput,
+          frameNumber: "▲ " + (Math.floor(Math.random() * 30) + 1).toString().padStart(2, "0"),
+          customUrl: finalImgUrl,
+          description: descInput,
+          stats: {
+            critics: 98,
+            audience: 94,
+            runtime: orientation === "portrait" ? "PORTRAIT SERIES" : "1h 40m",
+            format: formatInput,
+            country: "INDONESIA",
+            language: "SILENT",
+            aspect: aspectInput
+          },
+          awards: [
+            { stars: 5, label: awardLabel, quote: quoteInput },
+            { stars: 5, label: "DIRECTOR'S SELECTION", quote: "ESSENCE OF SILENCE" },
+            { stars: 4, label: "JURY PRIZE", quote: "UNFORGETTABLE FRAME" }
+          ]
+        };
+        const updatedList = addCustomSlide(newSlide);
+        app.reloadSlides(updatedList);
+      }
+
+      renderAdminList();
+      renderAlbumDropdown();
+      showPhotoListView();
+      if (isGalleryMode) renderGalleryView();
+    });
+
+    // Album Live Preview via URL and File Picker
+    if (adminAlbumCoverInput) {
+      adminAlbumCoverInput.addEventListener("input", (e) => {
+        const url = e.target.value.trim();
+        if (url) {
+          currentAlbumPreviewUrl = url;
+          albumPreviewBox.innerHTML = `<img src="${url}" alt="Pratinjau Sampul" />`;
+        }
+      });
+    }
+
+    if (adminAlbumFileInput) {
+      adminAlbumFileInput.addEventListener("change", async (e) => {
+        if (e.target.files && e.target.files[0]) {
+          const file = e.target.files[0];
+          const dataUrl = await readFileAsDataUrl(file);
+          currentAlbumPreviewUrl = dataUrl;
+          albumPreviewBox.innerHTML = `<img src="${dataUrl}" alt="Pratinjau Sampul" />`;
+        }
+      });
+    }
+
+    // --- OPEN ALBUM FORM (Add vs Edit) ---
+    function openAddAlbumForm() {
+      adminAlbumForm.reset();
+      adminEditAlbumId.value = "";
+      albumFormHeading.textContent = "Buat Album Baru";
+      currentAlbumPreviewUrl = "";
+      albumPreviewBox.innerHTML = `<span class="form-preview-placeholder">Pratinjau Sampul Album</span>`;
+      showAlbumFormView();
+    }
+
+    function openEditAlbumForm(album) {
+      adminEditAlbumId.value = album.id;
+      albumFormHeading.textContent = `Ubah Album: ${album.title}`;
+      document.getElementById("admin-album-title").value = album.title || "";
+      document.getElementById("admin-album-subtitle").value = album.subtitle || "";
+      document.getElementById("admin-album-year").value = album.year || "2026";
+      document.getElementById("admin-album-location").value = album.location || "";
+      document.getElementById("admin-album-film").value = album.filmStock || "";
+      document.getElementById("admin-album-note").value = album.curatorNote || "";
+
+      const cover = album.coverImage || "";
+      currentAlbumPreviewUrl = cover;
+      adminAlbumCoverInput.value = cover.startsWith("data:") ? "" : cover;
+      if (cover) {
+        albumPreviewBox.innerHTML = `<img src="${cover}" alt="Pratinjau Sampul" />`;
+      } else {
+        albumPreviewBox.innerHTML = `<span class="form-preview-placeholder">Pratinjau Sampul Album</span>`;
+      }
+      showAlbumFormView();
+    }
+
+    // Submit Album Form
+    adminAlbumForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const editId = adminEditAlbumId.value;
+      const title = document.getElementById("admin-album-title").value.trim();
+      const subtitle = document.getElementById("admin-album-subtitle").value.trim();
+      const year = document.getElementById("admin-album-year").value.trim() || "2026";
+      const location = document.getElementById("admin-album-location").value.trim() || "INDONESIA";
+      const filmStock = document.getElementById("admin-album-film").value.trim() || "35MM SILVER HALIDE";
+      const curatorNote = document.getElementById("admin-album-note").value.trim() || "Sebuah studi visual tematik.";
+
+      let coverImage = currentAlbumPreviewUrl;
+      if (adminAlbumFileInput.files && adminAlbumFileInput.files[0]) {
+        coverImage = await readFileAsDataUrl(adminAlbumFileInput.files[0]);
+      } else if (adminAlbumCoverInput.value.trim()) {
+        coverImage = adminAlbumCoverInput.value.trim();
+      }
+      if (!coverImage) {
+        coverImage = "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1200&h=800&fit=crop&q=75";
+      }
+
+      if (editId) {
+        updateAlbum(editId, { title, subtitle, year, location, coverImage, filmStock, curatorNote });
+      } else {
+        const newAlbum = {
+          id: "album-" + Date.now(),
+          title,
+          subtitle,
+          year,
+          location,
+          coverImage,
+          filmStock,
+          curatorNote
+        };
+        createAlbum(newAlbum);
+      }
+
+      renderAdminAlbumList();
+      renderAlbumDropdown();
+      showAlbumListView();
+      if (isGalleryMode) renderGalleryView();
+    });
+
+    function readFileAsDataUrl(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => resolve("");
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Initialize Dropdown
+    renderAlbumDropdown();
+  </script>
+</body>
+</html>
