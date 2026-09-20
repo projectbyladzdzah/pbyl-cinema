@@ -10,7 +10,7 @@ import {
   updateCloudAlbum,
   deleteCloudAlbum,
   pushLocalToCloud,
-} from "./supabase-client.js?v=2.3";
+} from "./supabase-client.js?v=2.4";
 
 export { pushLocalToCloud };
 

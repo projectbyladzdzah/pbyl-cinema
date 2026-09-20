@@ -3,7 +3,7 @@
    Darkroom Enlarger Crosshairs, Film Stock Rebate, Multi-Album Filtering & Aspect Masks
    ========================================================================== */
 
-import { loadSlides, getPhotosByAlbum, getSlideImageUrl, loadAlbums } from "./portfolio-manager.js?v=2.3";
+import { loadSlides, getPhotosByAlbum, getSlideImageUrl, loadAlbums } from "./portfolio-manager.js?v=2.4";
 
 // Layout & Physics Constants (Full-Screen Edge-to-Edge 100vw x 100dvh)
 const SLIDE_VH = 100;

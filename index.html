@@ -16,7 +16,7 @@
   <link rel="apple-touch-icon" href="public/pbyl-logo.png" />
 
   <!-- Stylesheet (cache-busted for instant mobile updates) -->
-  <link rel="stylesheet" href="css/cinema.css?v=2.3" />
+  <link rel="stylesheet" href="css/cinema.css?v=2.4" />
 
   <!-- GSAP 3 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -496,7 +496,7 @@
 
   <!-- Main Controller Application Script -->
   <script type="module">
-    import { CinemaReelApp } from "./js/cinema-reel.js?v=2.3";
+    import { CinemaReelApp } from "./js/cinema-reel.js?v=2.4";
     import {
       loadSlides,
       loadAlbums,
@@ -512,13 +512,13 @@
       getSlideImageUrl,
       syncWithSupabase,
       pushLocalToCloud
-    } from "./js/portfolio-manager.js?v=2.3";
+    } from "./js/portfolio-manager.js?v=2.4";
     import {
       getSupabaseConfig,
       saveSupabaseConfig,
       isSupabaseConnected,
       uploadImageToSupabase
-    } from "./js/supabase-client.js?v=2.3";
+    } from "./js/supabase-client.js?v=2.4";
 
     // Initialize the Cinema Reel Engine
     let app = new CinemaReelApp();

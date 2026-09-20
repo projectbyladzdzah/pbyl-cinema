@@ -784,27 +784,30 @@ button {
     image-rendering: high-quality !important;
   }
 
-  /* Fine-tune portrait on mobile so it leaves room for editorial title */
+  /* Portrait: Full-height fit on mobile (92dvh 4:5 ratio) */
+  .slide-image-wrapper.is-portrait {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
   .portrait-pillar-container {
     position: relative !important;
-    inset: auto !important;
-    z-index: 2 !important;
-    width: auto !important;
-    max-width: 88vw !important;
-    height: auto !important;
-    max-height: 52dvh !important;
-    margin: 0 auto !important;
-    margin-bottom: clamp(80px, 14dvh, 130px) !important;
+    height: 92dvh !important;
+    aspect-ratio: 4 / 5 !important;
+    max-width: 92vw !important;
     border-radius: 8px !important;
     overflow: hidden !important;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    z-index: 2 !important;
+    margin: 0 auto !important;
   }
 
   .portrait-main-img {
-    width: auto !important;
-    max-width: 88vw !important;
-    height: auto !important;
-    max-height: 52dvh !important;
-    object-fit: contain !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
     display: block !important;
   }
 
