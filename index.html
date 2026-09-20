@@ -463,10 +463,15 @@
               <small style="color: rgba(255,255,255,0.4); font-size: 10px; margin-top: 4px; display: block;">Ditemukan di dashboard Supabase: Project Settings &rarr; API &rarr; Project API keys &rarr; <code>anon / public</code></small>
             </div>
 
-            <div class="form-actions" style="margin-top: 1.5rem; justify-content: space-between;">
-              <button type="button" id="btn-sync-cloud-now" class="btn-secondary" style="font-size: 10px;">
-                🔄 Tarik Data Cloud Sekarang
-              </button>
+            <div class="form-actions" style="margin-top: 1.5rem; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+              <div style="display:flex; gap:0.5rem; flex-wrap: wrap;">
+                <button type="button" id="btn-sync-cloud-now" class="btn-secondary" style="font-size: 10px;">
+                  🔄 Tarik Data Cloud
+                </button>
+                <button type="button" id="btn-push-local-to-cloud" class="btn-secondary" style="font-size: 10px; border-color: rgba(216,164,127,0.4); color: var(--accent-amber);">
+                  ⬆️ Unggah Data Laptop Ini ke Cloud
+                </button>
+              </div>
               <button type="submit" id="btn-save-cloud-config" class="btn-primary">
                 Simpan & Hubungkan Cloud
               </button>
@@ -505,7 +510,8 @@
       resetToDefaultSlides,
       clearAllSlides,
       getSlideImageUrl,
-      syncWithSupabase
+      syncWithSupabase,
+      pushLocalToCloud
     } from "./js/portfolio-manager.js";
     import {
       getSupabaseConfig,
@@ -576,6 +582,7 @@
     const adminSupabaseUrl = document.getElementById("admin-supabase-url");
     const adminSupabaseKey = document.getElementById("admin-supabase-key");
     const btnSyncCloudNow = document.getElementById("btn-sync-cloud-now");
+    const btnPushLocalToCloud = document.getElementById("btn-push-local-to-cloud");
     const cloudStatusDot = document.getElementById("cloud-status-dot");
     const cloudStatusText = document.getElementById("cloud-status-text");
     const cloudStatusBadge = document.getElementById("cloud-status-badge");
@@ -1054,6 +1061,30 @@
         alert("Gagal sinkronisasi. Pastikan Supabase URL & Key sudah terhubung.");
       }
     });
+
+    if (btnPushLocalToCloud) {
+      btnPushLocalToCloud.addEventListener("click", async () => {
+        if (!isSupabaseConnected()) {
+          alert("Supabase belum terhubung. Pastikan URL dan Anon Key sudah tersimpan.");
+          return;
+        }
+        btnPushLocalToCloud.textContent = "Mengunggah Data...";
+        btnPushLocalToCloud.disabled = true;
+
+        try {
+          const albums = loadAlbums();
+          const slides = loadSlides();
+          await pushLocalToCloud(albums, slides);
+          alert("🎉 Berhasil! Seluruh data album dan foto di laptop ini telah diunggah ke Supabase Cloud. Sekarang semua HP dan perangkat lain akan menampilkan foto yang sama secara otomatis!");
+        } catch (err) {
+          console.error(err);
+          alert("Gagal mengunggah data ke Cloud: " + (err.message || err));
+        } finally {
+          btnPushLocalToCloud.textContent = "⬆️ Unggah Data Laptop Ini ke Cloud";
+          btnPushLocalToCloud.disabled = false;
+        }
+      });
+    }
 
     adminAddItemBtn.addEventListener("click", () => {
       if (activeAdminTab === "photos") openAddPhotoForm();

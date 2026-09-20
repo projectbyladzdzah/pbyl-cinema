@@ -10,19 +10,22 @@ function getCreateClientFn() {
   return null;
 }
 
-// Config Keys (Can be configured here or via Admin UI localStorage)
-const DEFAULT_SUPABASE_URL = "";
-const DEFAULT_SUPABASE_ANON_KEY = "";
+// Config Keys (Configured directly for universal multi-device exhibition)
+const DEFAULT_SUPABASE_URL = "https://yakdjsmzsosybpihpmim.supabase.co";
+const DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlha2Rqc216c29zeWJwaWhwbWltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4ODU3MzgsImV4cCI6MjEwNTQ2MTczOH0.JzHvIDOH2Qe40N8x8ZGQQOuAjxp4u3VLHlZT7K7m3lw";
 
 export function getSupabaseConfig() {
-  const url = localStorage.getItem("pbyl_supabase_url") || DEFAULT_SUPABASE_URL;
-  const key = localStorage.getItem("pbyl_supabase_key") || DEFAULT_SUPABASE_ANON_KEY;
-  return { url: url.trim(), key: key.trim() };
+  let url = localStorage.getItem("pbyl_supabase_url") || DEFAULT_SUPABASE_URL;
+  let key = localStorage.getItem("pbyl_supabase_key") || DEFAULT_SUPABASE_ANON_KEY;
+  url = (url || "").trim().replace(/\/rest\/v1\/?$/, "").replace(/\/+$/, "");
+  key = (key || "").trim();
+  return { url, key };
 }
 
 export function saveSupabaseConfig(url, key) {
-  localStorage.setItem("pbyl_supabase_url", url.trim());
-  localStorage.setItem("pbyl_supabase_key", key.trim());
+  const cleanUrl = (url || "").trim().replace(/\/rest\/v1\/?$/, "").replace(/\/+$/, "");
+  localStorage.setItem("pbyl_supabase_url", cleanUrl);
+  localStorage.setItem("pbyl_supabase_key", (key || "").trim());
 }
 
 let supabaseInstance = null;
@@ -65,7 +68,7 @@ export async function fetchCloudAlbums() {
       .order("created_at", { ascending: true });
 
     if (error) throw error;
-    if (!data || data.length === 0) return null;
+    if (!data || data.length === 0) return [];
 
     return data.map((a) => ({
       id: a.id,
@@ -94,7 +97,7 @@ export async function fetchCloudPhotos() {
       .order("order_idx", { ascending: true });
 
     if (error) throw error;
-    if (!data || data.length === 0) return null;
+    if (!data || data.length === 0) return [];
 
     return data.map((p) => {
       const words = (p.title || "").split(" ");
@@ -261,5 +264,62 @@ export async function deleteCloudAlbum(id) {
 
   const { error } = await supabase.from("albums").delete().eq("id", id);
   if (error) throw error;
+  return true;
+}
+
+export async function clearAllCloudPhotos() {
+  const supabase = getSupabaseClient();
+  if (!supabase) return false;
+  try {
+    const { error } = await supabase.from("photos").delete().neq("id", "none");
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    console.warn("Clear cloud photos error:", err);
+    return false;
+  }
+}
+
+export async function pushLocalToCloud(albums, slides) {
+  const supabase = getSupabaseClient();
+  if (!supabase) throw new Error("Supabase belum terhubung.");
+
+  // 1. Upsert Albums
+  if (Array.isArray(albums) && albums.length > 0) {
+    const albumRows = albums.map((a) => ({
+      id: a.id,
+      title: a.title,
+      subtitle: a.subtitle || "",
+      year: a.year || "2026",
+      location: a.location || "INDONESIA",
+      cover_image: a.coverImage || "",
+      film_stock: a.filmStock || "35MM SILVER HALIDE",
+      curator_note: a.curatorNote || "",
+    }));
+    const { error: albumErr } = await supabase.from("albums").upsert(albumRows);
+    if (albumErr) throw albumErr;
+  }
+
+  // 2. Upsert Photos
+  if (Array.isArray(slides) && slides.length > 0) {
+    const photoRows = slides.map((s, idx) => ({
+      id: s.id,
+      album_id: s.albumId,
+      title: Array.isArray(s.titleLines) ? s.titleLines.join(" ") : (s.title || "UNTITLED"),
+      year: s.year || "2026",
+      category: s.category || "FINE ART",
+      director: s.director || "PBYL CINEMA",
+      description: s.description || "",
+      orientation: s.orientation || "landscape",
+      image_url: s.customUrl || (s.imageId ? `https://images.unsplash.com/photo-${s.imageId}?w=1920&h=1080` : ""),
+      film_code: s.filmCode || "35MM",
+      aspect: s.stats?.aspect || (s.orientation === "portrait" ? "4:5" : "2.39:1"),
+      format: s.stats?.format || "35MM CINEMA",
+      order_idx: idx + 1,
+    }));
+    const { error: photoErr } = await supabase.from("photos").upsert(photoRows);
+    if (photoErr) throw photoErr;
+  }
+
   return true;
 }

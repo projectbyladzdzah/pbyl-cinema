@@ -5,10 +5,14 @@ import {
   insertCloudPhoto,
   updateCloudPhoto,
   deleteCloudPhoto,
+  clearAllCloudPhotos,
   insertCloudAlbum,
   updateCloudAlbum,
   deleteCloudAlbum,
+  pushLocalToCloud,
 } from "./supabase-client.js";
+
+export { pushLocalToCloud };
 
 export const DEFAULT_ALBUMS = [
   {
@@ -375,6 +379,9 @@ export function deleteSlide(id) {
 
 export function clearAllSlides() {
   saveSlides([]);
+  if (isSupabaseConnected()) {
+    clearAllCloudPhotos().catch((err) => console.warn("Supabase clear all photos error:", err));
+  }
   return [];
 }
 
@@ -384,10 +391,21 @@ export async function syncWithSupabase() {
     const cloudAlbums = await fetchCloudAlbums();
     const cloudPhotos = await fetchCloudPhotos();
 
-    if (cloudAlbums && Array.isArray(cloudAlbums)) {
+    const localSlides = loadSlides();
+    const localAlbums = loadAlbums();
+
+    // If cloud is currently empty but local has custom slides, auto-upload to cloud!
+    const hasCustomLocal = localSlides && localSlides.length > 0 && localSlides.some((s) => s.customUrl || (s.id && s.id.startsWith("photo-")));
+    if ((!cloudPhotos || cloudPhotos.length === 0) && hasCustomLocal) {
+      console.log("Supabase is empty, pushing local custom photos to cloud...");
+      await pushLocalToCloud(localAlbums, localSlides);
+      return true;
+    }
+
+    if (cloudAlbums && Array.isArray(cloudAlbums) && cloudAlbums.length > 0) {
       saveAlbums(cloudAlbums);
     }
-    if (cloudPhotos && Array.isArray(cloudPhotos)) {
+    if (cloudPhotos && Array.isArray(cloudPhotos) && cloudPhotos.length > 0) {
       saveSlides(cloudPhotos);
     }
     return true;
