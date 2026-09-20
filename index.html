@@ -16,6 +16,9 @@
 
   <!-- GSAP 3 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -227,10 +230,11 @@
         </div>
       </div>
 
-      <!-- Admin Tabs: Kelola Foto vs Kelola Album -->
+      <!-- Admin Tabs: Kelola Foto vs Kelola Album vs Cloud -->
       <div class="admin-tabs">
         <button type="button" id="tab-btn-photos" class="admin-tab-btn active">📷 Kelola Foto</button>
         <button type="button" id="tab-btn-albums" class="admin-tab-btn">📁 Kelola Album</button>
+        <button type="button" id="tab-btn-cloud" class="admin-tab-btn">☁️ Supabase Cloud</button>
       </div>
 
       <!-- Admin Content Area -->
@@ -431,6 +435,57 @@
             </form>
           </div>
         </div>
+
+        <!-- ==================== TAB 3: SUPABASE CLOUD ==================== -->
+        <div id="admin-tab-cloud-content" style="display: none;">
+          <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <h3 class="form-title" style="margin-bottom: 0.25rem;">Sinkronisasi Supabase Cloud</h3>
+                <p class="form-desc">Hubungkan database dan cloud storage agar foto yang diunggah langsung tampil untuk semua pengunjung di dunia secara real-time.</p>
+              </div>
+              <div id="cloud-status-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 9999px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: var(--text-muted);">
+                <span id="cloud-status-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #777;"></span>
+                <span id="cloud-status-text">Memeriksa...</span>
+              </div>
+            </div>
+          </div>
+
+          <form id="admin-cloud-form">
+            <div class="form-group">
+              <label for="admin-supabase-url">Supabase Project URL</label>
+              <input type="url" id="admin-supabase-url" placeholder="https://xxxxxxxxxxxxxx.supabase.co" class="form-control" />
+              <small style="color: rgba(255,255,255,0.4); font-size: 10px; margin-top: 4px; display: block;">Ditemukan di dashboard Supabase: Project Settings &rarr; API &rarr; Project URL</small>
+            </div>
+
+            <div class="form-group">
+              <label for="admin-supabase-key">Supabase Anon Public API Key</label>
+              <input type="password" id="admin-supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="form-control" />
+              <small style="color: rgba(255,255,255,0.4); font-size: 10px; margin-top: 4px; display: block;">Ditemukan di dashboard Supabase: Project Settings &rarr; API &rarr; Project API keys &rarr; <code>anon / public</code></small>
+            </div>
+
+            <div class="form-actions" style="margin-top: 1.5rem; justify-content: space-between;">
+              <button type="button" id="btn-sync-cloud-now" class="btn-secondary" style="font-size: 10px;">
+                🔄 Tarik Data Cloud Sekarang
+              </button>
+              <button type="submit" id="btn-save-cloud-config" class="btn-primary">
+                Simpan & Hubungkan Cloud
+              </button>
+            </div>
+          </form>
+
+          <!-- Quick Setup Guide Box -->
+          <div style="margin-top: 2rem; padding: 1.25rem; border-radius: 12px; background: rgba(216,164,127,0.06); border: 1px solid rgba(216,164,127,0.2);">
+            <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--accent-amber); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.1em;">
+              📋 Panduan Cepat 3 Langkah Supabase:
+            </div>
+            <ol style="font-size: 12px; color: rgba(255,255,255,0.75); line-height: 1.7; padding-left: 1.2rem; margin: 0;">
+              <li>Buka <a href="https://supabase.com" target="_blank" style="color: var(--accent-amber); text-decoration: underline;">supabase.com</a> dan buat proyek baru (100% Gratis).</li>
+              <li>Buka menu <strong>SQL Editor</strong> di Supabase, lalu salin dan jalankan isi file <code>supabase-schema.sql</code> yang sudah disediakan di folder proyek ini.</li>
+              <li>Buka menu <strong>Settings &rarr; API</strong>, lalu salin <em>Project URL</em> dan <em>anon public key</em> ke form di atas, lalu klik <strong>Simpan & Hubungkan Cloud</strong>.</li>
+            </ol>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -449,12 +504,29 @@
       updateAlbum,
       deleteAlbum,
       resetToDefaultSlides,
-      getSlideImageUrl
+      getSlideImageUrl,
+      syncWithSupabase
     } from "./js/portfolio-manager.js";
+    import {
+      getSupabaseConfig,
+      saveSupabaseConfig,
+      isSupabaseConnected,
+      uploadImageToSupabase
+    } from "./js/supabase-client.js";
 
     // Initialize the Cinema Reel Engine
     let app = new CinemaReelApp();
     app.init();
+
+    // Sync with Supabase on start if credentials are saved
+    syncWithSupabase().then((synced) => {
+      if (synced) {
+        const freshSlides = loadSlides();
+        app.reloadSlides(freshSlides);
+        renderAlbumDropdown();
+        if (isGalleryMode) renderGalleryView();
+      }
+    });
 
     // DOM References
     const toggleViewBtn = document.getElementById("btn-toggle-view");
@@ -487,8 +559,10 @@
 
     const tabBtnPhotos = document.getElementById("tab-btn-photos");
     const tabBtnAlbums = document.getElementById("tab-btn-albums");
+    const tabBtnCloud = document.getElementById("tab-btn-cloud");
     const tabPhotosContent = document.getElementById("admin-tab-photos-content");
     const tabAlbumsContent = document.getElementById("admin-tab-albums-content");
+    const tabCloudContent = document.getElementById("admin-tab-cloud-content");
 
     const adminPhotoListView = document.getElementById("admin-photo-list-view");
     const adminPhotoFormView = document.getElementById("admin-photo-form-view");
@@ -497,6 +571,14 @@
     const adminAlbumListView = document.getElementById("admin-album-list-view");
     const adminAlbumFormView = document.getElementById("admin-album-form-view");
     const adminAlbumContainer = document.getElementById("admin-album-container");
+
+    const adminCloudForm = document.getElementById("admin-cloud-form");
+    const adminSupabaseUrl = document.getElementById("admin-supabase-url");
+    const adminSupabaseKey = document.getElementById("admin-supabase-key");
+    const btnSyncCloudNow = document.getElementById("btn-sync-cloud-now");
+    const cloudStatusDot = document.getElementById("cloud-status-dot");
+    const cloudStatusText = document.getElementById("cloud-status-text");
+    const cloudStatusBadge = document.getElementById("cloud-status-badge");
 
     // Photo Form References
     const adminPhotoForm = document.getElementById("admin-photo-form");
@@ -849,27 +931,108 @@
     // Admin Tabs Switcher
     function switchAdminTab(tab) {
       activeAdminTab = tab;
+      tabBtnPhotos.classList.toggle("active", tab === "photos");
+      tabBtnAlbums.classList.toggle("active", tab === "albums");
+      tabBtnCloud.classList.toggle("active", tab === "cloud");
+
+      tabPhotosContent.style.display = tab === "photos" ? "block" : "none";
+      tabAlbumsContent.style.display = tab === "albums" ? "block" : "none";
+      tabCloudContent.style.display = tab === "cloud" ? "block" : "none";
+
       if (tab === "photos") {
-        tabBtnPhotos.classList.add("active");
-        tabBtnAlbums.classList.remove("active");
-        tabPhotosContent.style.display = "block";
-        tabAlbumsContent.style.display = "none";
         showPhotoListView();
-      } else {
-        tabBtnAlbums.classList.add("active");
-        tabBtnPhotos.classList.remove("active");
-        tabAlbumsContent.style.display = "block";
-        tabPhotosContent.style.display = "none";
+      } else if (tab === "albums") {
         showAlbumListView();
+      } else if (tab === "cloud") {
+        loadCloudConfigToForm();
+        updateCloudStatusDisplay();
       }
     }
 
     tabBtnPhotos.addEventListener("click", () => switchAdminTab("photos"));
     tabBtnAlbums.addEventListener("click", () => switchAdminTab("albums"));
+    tabBtnCloud.addEventListener("click", () => switchAdminTab("cloud"));
+
+    // --- SUPABASE CLOUD CONFIG CONTROLLER ---
+    function loadCloudConfigToForm() {
+      const { url, key } = getSupabaseConfig();
+      adminSupabaseUrl.value = url || "";
+      adminSupabaseKey.value = key || "";
+    }
+
+    function updateCloudStatusDisplay() {
+      const isConnected = isSupabaseConnected();
+      if (isConnected) {
+        cloudStatusDot.style.background = "#22c55e";
+        cloudStatusText.textContent = "Terhubung ke Supabase Live";
+        cloudStatusBadge.style.borderColor = "rgba(34, 197, 94, 0.4)";
+        cloudStatusBadge.style.color = "#86efac";
+      } else {
+        cloudStatusDot.style.background = "#777";
+        cloudStatusText.textContent = "Penyimpanan Lokal (Offline)";
+        cloudStatusBadge.style.borderColor = "rgba(255, 255, 255, 0.15)";
+        cloudStatusBadge.style.color = "var(--text-muted)";
+      }
+    }
+
+    adminCloudForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const url = adminSupabaseUrl.value.trim();
+      const key = adminSupabaseKey.value.trim();
+
+      saveSupabaseConfig(url, key);
+      updateCloudStatusDisplay();
+
+      if (!url || !key) {
+        alert("Konfigurasi disimpan. Web kini berjalan dalam mode penyimpanan lokal (offline).");
+        return;
+      }
+
+      const saveBtn = document.getElementById("btn-save-cloud-config");
+      saveBtn.textContent = "Menguji Koneksi...";
+      saveBtn.disabled = true;
+
+      const synced = await syncWithSupabase();
+      saveBtn.textContent = "Simpan & Hubungkan Cloud";
+      saveBtn.disabled = false;
+
+      if (synced) {
+        updateCloudStatusDisplay();
+        const freshSlides = loadSlides();
+        app.reloadSlides(freshSlides);
+        renderAdminList();
+        renderAdminAlbumList();
+        renderAlbumDropdown();
+        alert("🎉 Berhasil terhubung ke Supabase Cloud! Foto dan album berhasil disinkronkan secara real-time.");
+      } else {
+        alert("Peringatan: Gagal memuat data dari Supabase. Pastikan URL & Anon Key benar serta tabel di file supabase-schema.sql sudah dibuat.");
+      }
+    });
+
+    btnSyncCloudNow.addEventListener("click", async () => {
+      btnSyncCloudNow.textContent = "Menyinkronkan...";
+      btnSyncCloudNow.disabled = true;
+
+      const ok = await syncWithSupabase();
+      btnSyncCloudNow.textContent = "🔄 Tarik Data Cloud Sekarang";
+      btnSyncCloudNow.disabled = false;
+
+      if (ok) {
+        const fresh = loadSlides();
+        app.reloadSlides(fresh);
+        renderAdminList();
+        renderAdminAlbumList();
+        renderAlbumDropdown();
+        if (isGalleryMode) renderGalleryView();
+        alert("Katalog foto berhasil disinkronkan dari Cloud!");
+      } else {
+        alert("Gagal sinkronisasi. Pastikan Supabase URL & Key sudah terhubung.");
+      }
+    });
 
     adminAddItemBtn.addEventListener("click", () => {
       if (activeAdminTab === "photos") openAddPhotoForm();
-      else openAddAlbumForm();
+      else if (activeAdminTab === "albums") openAddAlbumForm();
     });
 
     // --- PHOTO SUB-VIEWS ---
@@ -1162,7 +1325,23 @@
 
       let finalImgUrl = currentPhotoPreviewUrl;
       if (adminFileInput.files && adminFileInput.files[0]) {
-        finalImgUrl = await readFileAsDataUrl(adminFileInput.files[0]);
+        const file = adminFileInput.files[0];
+        if (isSupabaseConnected()) {
+          try {
+            const submitBtn = adminPhotoForm.querySelector('button[type="submit"]');
+            const prevText = submitBtn.textContent;
+            submitBtn.textContent = "Mengunggah ke Cloud...";
+            submitBtn.disabled = true;
+            finalImgUrl = await uploadImageToSupabase(file);
+            submitBtn.textContent = prevText;
+            submitBtn.disabled = false;
+          } catch (uploadErr) {
+            console.warn("Upload ke Supabase storage gagal, beralih ke kompresi lokal:", uploadErr);
+            finalImgUrl = await readFileAsDataUrl(file);
+          }
+        } else {
+          finalImgUrl = await readFileAsDataUrl(file);
+        }
       } else if (adminUrlInput.value.trim()) {
         finalImgUrl = adminUrlInput.value.trim();
       }
@@ -1308,7 +1487,23 @@
 
       let coverImage = currentAlbumPreviewUrl;
       if (adminAlbumFileInput.files && adminAlbumFileInput.files[0]) {
-        coverImage = await readFileAsDataUrl(adminAlbumFileInput.files[0]);
+        const file = adminAlbumFileInput.files[0];
+        if (isSupabaseConnected()) {
+          try {
+            const submitBtn = adminAlbumForm.querySelector('button[type="submit"]');
+            const prevText = submitBtn.textContent;
+            submitBtn.textContent = "Mengunggah Sampul ke Cloud...";
+            submitBtn.disabled = true;
+            coverImage = await uploadImageToSupabase(file);
+            submitBtn.textContent = prevText;
+            submitBtn.disabled = false;
+          } catch (uploadErr) {
+            console.warn("Upload sampul ke Supabase storage gagal, beralih ke kompresi lokal:", uploadErr);
+            coverImage = await readFileAsDataUrl(file);
+          }
+        } else {
+          coverImage = await readFileAsDataUrl(file);
+        }
       } else if (adminAlbumCoverInput.value.trim()) {
         coverImage = adminAlbumCoverInput.value.trim();
       }

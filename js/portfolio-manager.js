@@ -1,7 +1,14 @@
-/* ==========================================================================
-   PORTFOLIO MANAGER — ALBUMS & SLIDES DATA LAYER (v3)
-   Bespoke Cinema Atelier Architecture with Multi-Album Organization
-   ========================================================================== */
+import {
+  isSupabaseConnected,
+  fetchCloudAlbums,
+  fetchCloudPhotos,
+  insertCloudPhoto,
+  updateCloudPhoto,
+  deleteCloudPhoto,
+  insertCloudAlbum,
+  updateCloudAlbum,
+  deleteCloudAlbum,
+} from "./supabase-client.js";
 
 export const DEFAULT_ALBUMS = [
   {
@@ -258,6 +265,10 @@ export function createAlbum(albumData) {
   const albums = loadAlbums();
   albums.push(albumData);
   saveAlbums(albums);
+
+  if (isSupabaseConnected()) {
+    insertCloudAlbum(albumData).catch((err) => console.warn("Supabase insert album error:", err));
+  }
   return albums;
 }
 
@@ -267,6 +278,10 @@ export function updateAlbum(id, updatedData) {
   if (index !== -1) {
     albums[index] = { ...albums[index], ...updatedData };
     saveAlbums(albums);
+
+    if (isSupabaseConnected()) {
+      updateCloudAlbum(id, albums[index]).catch((err) => console.warn("Supabase update album error:", err));
+    }
   }
   return albums;
 }
@@ -285,6 +300,9 @@ export function deleteAlbum(id) {
   });
   saveSlides(slides);
 
+  if (isSupabaseConnected()) {
+    deleteCloudAlbum(id).catch((err) => console.warn("Supabase delete album error:", err));
+  }
   return albums;
 }
 
@@ -324,6 +342,10 @@ export function addCustomSlide(slideData) {
   const slides = loadSlides();
   slides.unshift(slideData);
   saveSlides(slides);
+
+  if (isSupabaseConnected()) {
+    insertCloudPhoto(slideData).catch((err) => console.warn("Supabase insert photo error:", err));
+  }
   return slides;
 }
 
@@ -333,6 +355,10 @@ export function updateSlide(id, updatedData) {
   if (index !== -1) {
     slides[index] = { ...slides[index], ...updatedData };
     saveSlides(slides);
+
+    if (isSupabaseConnected()) {
+      updateCloudPhoto(id, slides[index]).catch((err) => console.warn("Supabase update photo error:", err));
+    }
   }
   return slides;
 }
@@ -344,7 +370,30 @@ export function deleteSlide(id) {
     slides = [...DEFAULT_SLIDES];
   }
   saveSlides(slides);
+
+  if (isSupabaseConnected()) {
+    deleteCloudPhoto(id).catch((err) => console.warn("Supabase delete photo error:", err));
+  }
   return slides;
+}
+
+export async function syncWithSupabase() {
+  if (!isSupabaseConnected()) return false;
+  try {
+    const cloudAlbums = await fetchCloudAlbums();
+    const cloudPhotos = await fetchCloudPhotos();
+
+    if (cloudAlbums && cloudAlbums.length > 0) {
+      saveAlbums(cloudAlbums);
+    }
+    if (cloudPhotos && cloudPhotos.length > 0) {
+      saveSlides(cloudPhotos);
+    }
+    return true;
+  } catch (err) {
+    console.warn("Sync with Supabase failed:", err);
+    return false;
+  }
 }
 
 export function reorderSlide(id, direction) {
