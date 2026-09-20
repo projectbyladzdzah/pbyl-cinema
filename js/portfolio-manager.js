@@ -447,7 +447,10 @@ export function getSlideImageUrl(slide, w = 1920, h = 1080) {
     return slide.customUrl;
   }
   if (slide.imageId) {
-    return `https://images.unsplash.com/photo-${slide.imageId}?w=${w}&h=${h}&fit=crop&q=75&auto=format`;
+    if (slide.orientation === "portrait") {
+      return `https://images.unsplash.com/photo-${slide.imageId}?w=1200&h=1600&fit=crop&q=80&auto=format`;
+    }
+    return `https://images.unsplash.com/photo-${slide.imageId}?w=1920&h=1080&fit=crop&q=80&auto=format`;
   }
-  return "https://images.unsplash.com/photo-1610847455028-9e55e62bac33?w=1920&h=1080&fit=crop&q=75&auto=format";
+  return "https://images.unsplash.com/photo-1610847455028-9e55e62bac33?w=1920&h=1080&fit=crop&q=80&auto=format";
 }

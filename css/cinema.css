@@ -499,6 +499,31 @@ button {
   -webkit-backface-visibility: hidden;
 }
 
+/* Landscape Dual-Layer (Desktop Default: Full-Bleed Cinema) */
+.landscape-ambient-bg {
+  display: none;
+}
+
+.landscape-pillar-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.landscape-main-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: high-quality;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
 /* Portrait Special Framing */
 .slide-image-wrapper.is-portrait {
   display: flex;
@@ -694,37 +719,124 @@ button {
   color: rgba(255, 255, 255, 0.55);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1024px) {
+  /* On mobile / portrait displays, display horizontal photos in full uncropped glory */
+  .slide-image-wrapper.is-landscape {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .landscape-ambient-bg {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    filter: blur(42px) brightness(0.24) saturate(1.4);
+    transform: scale(1.15);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .landscape-pillar-container {
+    position: relative;
+    z-index: 2;
+    width: 95vw;
+    max-width: 95vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: clamp(65px, 14dvh, 125px);
+    border-radius: 8px;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+    background: #000;
+  }
+
+  .landscape-main-img {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 48dvh !important;
+    object-fit: contain !important;
+    display: block !important;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: high-quality;
+  }
+
+  /* Fine-tune portrait on mobile so it leaves room for editorial title */
+  .portrait-pillar-container {
+    max-height: 52dvh !important;
+    max-width: 88vw !important;
+    margin-bottom: clamp(55px, 12dvh, 110px);
+  }
+
   .slide-content-layer {
-    padding: 0 1.5rem 2rem;
+    padding: 0 1.25rem 1.75rem !important;
     background: linear-gradient(
       180deg,
-      transparent 40%,
-      rgba(10, 9, 8, 0.5) 65%,
-      rgba(10, 9, 8, 0.92) 100%
-    );
+      transparent 35%,
+      rgba(10, 9, 8, 0.65) 60%,
+      rgba(10, 9, 8, 0.95) 100%
+    ) !important;
+    z-index: 6;
   }
 
   .slide-editorial-bar {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 0.75rem;
   }
 
   .editorial-left {
     max-width: 100%;
-    gap: 0.45rem;
+    gap: 0.35rem;
   }
 
   .editorial-title {
-    font-size: clamp(1.65rem, 6.5vw, 2.6rem);
+    font-size: clamp(1.5rem, 5.5vw, 2.25rem);
+    line-height: 1.1;
   }
 
   .editorial-right {
     max-width: 100%;
     align-items: flex-start;
     text-align: left;
-    gap: 0.5rem;
+    gap: 0.4rem;
+  }
+
+  .editorial-story {
+    font-size: 11.5px;
+    line-height: 1.45;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Film rebate info subtle on mobile */
+  .film-rebate-strip {
+    font-size: 8px;
+    letter-spacing: 0.14em;
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 950px) and (orientation: landscape) {
+  .landscape-pillar-container {
+    margin-bottom: 0 !important;
+    max-height: 86dvh !important;
+    width: auto !important;
+  }
+  .landscape-main-img {
+    max-height: 86dvh !important;
+    width: auto !important;
+  }
+  .portrait-pillar-container {
+    margin-bottom: 0 !important;
+    max-height: 88dvh !important;
   }
 }
 
@@ -1787,8 +1899,8 @@ button {
 /* Individual Photos Grid */
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
 }
 
 .gallery-card {

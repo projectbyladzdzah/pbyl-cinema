@@ -188,7 +188,7 @@ export class CinemaReelApp {
 
       // Image Parallax Wrapper
       const imgWrap = document.createElement("div");
-      imgWrap.className = `slide-image-wrapper ${isPortrait ? "is-portrait" : ""}`;
+      imgWrap.className = `slide-image-wrapper ${isPortrait ? "is-portrait" : "is-landscape"}`;
       imgWrap.setAttribute("data-slide-image", "");
 
       const imageUrl = getSlideImageUrl(slide, this.imgDims.w, this.imgDims.h);
@@ -204,9 +204,12 @@ export class CinemaReelApp {
           <div class="slide-vignette-radial"></div>
         `;
       } else {
-        // Full-Bleed Cinema Landscape with Film Grain
+        // Dual-Layer Landscape: Full-Bleed on Desktop, Ambient Backdrop + Contained Cinema Frame on Mobile!
         imgWrap.innerHTML = `
-          <img src="${imageUrl}" alt="${slide.titleLines.join(" ")}" loading="eager" decoding="async" fetchpriority="${isFirst ? "high" : "auto"}" draggable="false" />
+          <img src="${imageUrl}" class="landscape-ambient-bg" alt="" aria-hidden="true" draggable="false" />
+          <div class="landscape-pillar-container">
+            <img src="${imageUrl}" class="landscape-main-img" alt="${slide.titleLines.join(" ")}" loading="eager" decoding="async" fetchpriority="${isFirst ? "high" : "auto"}" draggable="false" />
+          </div>
           <div class="slide-vignette-vertical"></div>
           <div class="slide-vignette-radial"></div>
         `;
