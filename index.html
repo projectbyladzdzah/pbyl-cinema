@@ -764,15 +764,24 @@
     }
 
     // ========================================================================
-    // ADMIN AUTHENTICATION & LOGIN CONTROLLER
+    // ADMIN AUTHENTICATION & LOGIN CONTROLLER (SHA-256 HASHED)
     // ========================================================================
-    function getAdminPassword() {
-      const stored = localStorage.getItem("pbyl_admin_password");
-      if (!stored || stored === "pbyl123") {
-        localStorage.setItem("pbyl_admin_password", "Mufidz69");
-        return "Mufidz69";
+    const DEFAULT_ADMIN_HASH = "17384db4da8aec90fbc48b5331cae1df5318cc1962f702db40486c15e9cb3d2f";
+
+    async function sha256Hex(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+      return Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    function getAdminHash() {
+      // Clear legacy plaintext storage if still lingering
+      if (localStorage.getItem("pbyl_admin_password")) {
+        localStorage.removeItem("pbyl_admin_password");
       }
-      return stored;
+      return localStorage.getItem("pbyl_admin_hash") || DEFAULT_ADMIN_HASH;
     }
 
     function isAdminLoggedIn() {
@@ -821,12 +830,13 @@
       }
     });
 
-    adminLoginForm.addEventListener("submit", (e) => {
+    adminLoginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const enteredPass = adminLoginPass.value.trim();
-      const actualPass = getAdminPassword();
+      const enteredHash = await sha256Hex(enteredPass);
+      const actualHash = getAdminHash();
 
-      if (enteredPass === actualPass) {
+      if (enteredHash === actualHash) {
         sessionStorage.setItem("pbyl_admin_session", "true");
         closeLoginModal();
         openAdminPanel();
@@ -845,11 +855,12 @@
       alert("Anda telah keluar dari Admin Panel.");
     });
 
-    btnAdminChangePass.addEventListener("click", () => {
-      const current = getAdminPassword();
+    btnAdminChangePass.addEventListener("click", async () => {
+      const currentHash = getAdminHash();
       const oldInput = prompt("Masukkan kata sandi saat ini:");
       if (oldInput === null) return;
-      if (oldInput !== current) {
+      const oldHash = await sha256Hex(oldInput.trim());
+      if (oldHash !== currentHash) {
         alert("Kata sandi lama tidak cocok!");
         return;
       }
@@ -859,8 +870,9 @@
         alert("Gagal: Kata sandi baru harus memiliki minimal 4 karakter.");
         return;
       }
-      localStorage.setItem("pbyl_admin_password", newPass.trim());
-      alert("Berhasil! Kata sandi Admin Panel telah diubah menjadi: " + newPass.trim());
+      const newHash = await sha256Hex(newPass.trim());
+      localStorage.setItem("pbyl_admin_hash", newHash);
+      alert("Berhasil! Kata sandi Admin Panel telah diubah dengan enkripsi aman.");
     });
 
     // ========================================================================
